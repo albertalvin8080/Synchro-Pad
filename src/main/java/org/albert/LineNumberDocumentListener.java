@@ -28,7 +28,7 @@ public class LineNumberDocumentListener implements DocumentListener
                 font.getStyle(),
                 font.getSize()
         ));
-        this.lines.setPreferredSize(new Dimension(font.getSize() - 5, 0));
+//        this.lines.setPreferredSize(new Dimension(font.getSize() - 5, 0));
 
         this.scrollPane = scrollPane;
         this.scrollPane.getViewport().add(textArea);
