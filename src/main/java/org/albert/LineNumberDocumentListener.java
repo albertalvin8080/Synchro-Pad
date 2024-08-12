@@ -42,7 +42,7 @@ public class LineNumberDocumentListener implements DocumentListener
     {
         int caretPosition = textArea.getDocument().getLength();
         Element root = textArea.getDocument().getDefaultRootElement();
-        StringBuilder text = new StringBuilder("1" + System.lineSeparator());
+        StringBuilder text = new StringBuilder("1").append(System.lineSeparator());
         for (int i = 2; i < root.getElementIndex(caretPosition) + 2; i++)
         {
             text.append(i).append(System.lineSeparator());
