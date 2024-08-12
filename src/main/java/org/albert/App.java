@@ -1,10 +1,14 @@
 package org.albert;
 
+import org.albert.component.TextEditor;
+
+import javax.swing.*;
+
 public class App
 {
     public static void main( String[] args )
     {
-        new TextEditor();
+        SwingUtilities.invokeLater(TextEditor::new);
     }
 }
 

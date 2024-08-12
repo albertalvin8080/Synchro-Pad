@@ -1,4 +1,4 @@
-package org.albert;
+package org.albert.event_listener;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
