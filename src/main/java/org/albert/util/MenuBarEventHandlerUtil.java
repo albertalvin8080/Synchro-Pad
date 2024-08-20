@@ -11,10 +11,14 @@ public class MenuBarEventHandlerUtil
     private final JTextArea textArea;
     private String currentFilePath;
 
-    public MenuBarEventHandlerUtil(JFrame frame, JTextArea textArea)
+    public MenuBarEventHandlerUtil(JFrame frame, JTextArea textPane)
     {
         this.frame = frame;
-        this.textArea = textArea;
+        this.textArea = textPane;
+//        final MenuBarEventHandlerUtil menuBarEventHandlerUtil = new MenuBarEventHandlerUtil(this, textArea);
+//        saveMenuItem.addActionListener(menuBarEventHandlerUtil::Save);
+//        openMenuItem.addActionListener(menuBarEventHandlerUtil::Open);
+//        exitMenuItem.addActionListener(menuBarEventHandlerUtil::Exit);
     }
 
     public void Exit(ActionEvent e)

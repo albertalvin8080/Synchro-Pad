@@ -1,5 +1,7 @@
 package org.albert.component;
 
+import org.albert.design_patterns.command.invoker.EditCommandInvoker;
+import org.albert.design_patterns.command.invoker.FileCommandInvoker;
 import org.albert.util.MenuBarEventHandlerUtil;
 
 import javax.swing.*;
@@ -21,6 +23,10 @@ public class TextEditor extends JFrame
     private final JMenuItem saveMenuItem;
     private final JMenuItem openMenuItem;
     private final JMenuItem exitMenuItem;
+    private final JMenu editMenu;
+    private final JMenuItem copyMenuItem;
+    private final JMenuItem cutMenuItem;
+    private final JMenuItem pasteMenuItem;
 
     public TextEditor()
     {
@@ -31,7 +37,7 @@ public class TextEditor extends JFrame
         textArea.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 20));
 
         scrollPane = new JScrollPane(textArea);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
         // ------- SPINNER -------
         spinnerLabel = new JLabel("Font:");
@@ -48,7 +54,13 @@ public class TextEditor extends JFrame
         });
 
         // ------- COLOR BUTTON -------
-        colorButton = new JButton("Color");
+        colorButton = new JButton();
+        colorButton.setBackground(Color.WHITE);
+        int colorButtonWidth = 25;
+        int colorButtonHeight = 25;
+        colorButton.setPreferredSize(new Dimension(colorButtonWidth, colorButtonHeight));
+        final Image scaledInstance = new ImageIcon("src/main/resources/colors.png").getImage().getScaledInstance(colorButtonWidth, colorButtonHeight, Image.SCALE_SMOOTH);
+        colorButton.setIcon(new ImageIcon(scaledInstance));
         colorButton.addActionListener(e -> {
             final Color color = JColorChooser.showDialog(this, "Choose a color", Color.BLACK);
             textArea.setForeground(color);
@@ -85,15 +97,31 @@ public class TextEditor extends JFrame
         openMenuItem = new JMenuItem("Open");
         exitMenuItem = new JMenuItem("Exit");
 
-        final MenuBarEventHandlerUtil menuBarEventHandlerUtil = new MenuBarEventHandlerUtil(this, textArea);
-        saveMenuItem.addActionListener(menuBarEventHandlerUtil::Save);
-        openMenuItem.addActionListener(menuBarEventHandlerUtil::Open);
-        exitMenuItem.addActionListener(menuBarEventHandlerUtil::Exit);
+        FileCommandInvoker fileCommandInvoker = new FileCommandInvoker(this, textArea);
+        saveMenuItem.addActionListener(e -> fileCommandInvoker.execute("save"));
+        openMenuItem.addActionListener(e -> fileCommandInvoker.execute("open"));
+        exitMenuItem.addActionListener(e -> fileCommandInvoker.execute("exit"));
 
         fileMenu.add(saveMenuItem);
         fileMenu.add(openMenuItem);
         fileMenu.add(exitMenuItem);
         menuBar.add(fileMenu);
+
+        editMenu = new JMenu("Edit");
+        copyMenuItem = new JMenuItem("Copy");
+        cutMenuItem = new JMenuItem("Cut");
+        pasteMenuItem = new JMenuItem("Paste");
+
+        EditCommandInvoker editCommandInvoker = new EditCommandInvoker(textArea);
+        copyMenuItem.addActionListener(e -> editCommandInvoker.execute("copy"));
+        cutMenuItem.addActionListener(e -> editCommandInvoker.execute("cut"));
+        pasteMenuItem.addActionListener(e -> editCommandInvoker.execute("paste"));
+
+        editMenu.add(copyMenuItem);
+        editMenu.add(cutMenuItem);
+        editMenu.add(pasteMenuItem);
+
+        menuBar.add(editMenu);
 
         this.setJMenuBar(menuBar);
         // !------- MENU BAR -------
