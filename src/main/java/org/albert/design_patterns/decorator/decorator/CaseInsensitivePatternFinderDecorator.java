@@ -2,6 +2,7 @@ package org.albert.design_patterns.decorator.decorator;
 
 import org.albert.design_patterns.decorator.contract.PatternFinder;
 import org.albert.design_patterns.decorator.contract.PatternFinderDecorator;
+import org.albert.util.WordIndex;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ public class CaseInsensitivePatternFinderDecorator extends PatternFinderDecorato
     }
 
     @Override
-    public List<Integer> find(String text, String pattern)
+    public List<WordIndex> find(String text, String pattern)
     {
         return wrapped.find(text.toLowerCase(), pattern.toLowerCase());
     }

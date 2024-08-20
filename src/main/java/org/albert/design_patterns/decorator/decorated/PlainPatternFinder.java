@@ -1,23 +1,28 @@
 package org.albert.design_patterns.decorator.decorated;
 
 import org.albert.design_patterns.decorator.contract.PatternFinder;
+import org.albert.util.WordIndex;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PlainPatternFinder implements PatternFinder
 {
     @Override
-    public List<Integer> find(String text, String pattern)
+    public List<WordIndex> find(String text, String pattern)
     {
-        List<Integer> list = new ArrayList<>();
-        int previousIndex = -1;
-        while(true)
+        List<WordIndex> matches = new ArrayList<>();
+
+        Pattern regexPattern = Pattern.compile(pattern);
+        Matcher matcher = regexPattern.matcher(text);
+
+        while (matcher.find())
         {
-            previousIndex = text.indexOf(pattern, previousIndex + 1);
-            if(previousIndex == -1) break;
-            list.add(previousIndex);
+            matches.add(new WordIndex(matcher.start(), matcher.end()));
         }
-        return list;
+
+        return matches;
     }
 }

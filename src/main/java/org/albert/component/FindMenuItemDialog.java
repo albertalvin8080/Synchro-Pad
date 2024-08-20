@@ -3,6 +3,8 @@ package org.albert.component;
 import org.albert.design_patterns.decorator.contract.PatternFinder;
 import org.albert.design_patterns.decorator.decorated.PlainPatternFinder;
 import org.albert.design_patterns.decorator.decorator.CaseInsensitivePatternFinderDecorator;
+import org.albert.design_patterns.decorator.decorator.WholeWordPatternFinderDecorator;
+import org.albert.util.WordIndex;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
@@ -21,9 +23,8 @@ public class FindMenuItemDialog extends JDialog
     private final JButton previousButton;
     private final JCheckBox caseInsensitiveCheckBox;
     private final JCheckBox wholeWordCheckBox;
-    private final JCheckBox regexCheckBox;
 
-    private List<Integer> integerList;
+    private List<WordIndex> wordIndexList;
     private String currentPattern;
     private int currentListIndex;
 
@@ -35,8 +36,6 @@ public class FindMenuItemDialog extends JDialog
         caseInsensitiveCheckBox.setFocusable(false);
         wholeWordCheckBox = new JCheckBox("W");
         wholeWordCheckBox.setFocusable(false);
-        regexCheckBox = new JCheckBox(".*");
-        regexCheckBox.setFocusable(false);
 
         patternTextField = new JTextField();
         findButton = new JButton("Find");
@@ -46,14 +45,16 @@ public class FindMenuItemDialog extends JDialog
             PatternFinder patternFinder = new PlainPatternFinder();
             if (caseInsensitiveCheckBox.isSelected())
                 patternFinder = new CaseInsensitivePatternFinderDecorator(patternFinder);
+            if (wholeWordCheckBox.isSelected())
+                patternFinder = new WholeWordPatternFinderDecorator(patternFinder);
 
-            integerList = patternFinder.find(textArea.getText(), currentPattern);
+            wordIndexList = patternFinder.find(textArea.getText(), currentPattern);
 
-            if (!integerList.isEmpty())
+            if (!wordIndexList.isEmpty())
             {
-                int textMatchIndex = integerList.get(0);
+                WordIndex wordIndex = wordIndexList.get(0);
                 currentListIndex = 0;
-                highlightMatches(textArea, textMatchIndex, currentListIndex++);
+                highlightMatches(textArea, wordIndex, currentListIndex);
             }
             else
             {
@@ -64,21 +65,34 @@ public class FindMenuItemDialog extends JDialog
         // ------- NEXT BUTTON -------
         nextButton = new JButton("Next");
         nextButton.addActionListener(e -> {
-            if (integerList == null || integerList.isEmpty()) return;
+            if (wordIndexList == null || wordIndexList.isEmpty()) return;
 
             // Returns to the start if it's already the last index.
-            if (currentListIndex >= integerList.size())
-                currentListIndex = 0;
+            if(currentListIndex + 1 >= wordIndexList.size())
+            {
+                currentListIndex = -1;
+            }
 
-            int textMatchIndex = integerList.get(currentListIndex);
-            highlightMatches(textArea, textMatchIndex, currentListIndex++);
+            WordIndex wordIndex = wordIndexList.get(++currentListIndex);
+            highlightMatches(textArea, wordIndex, currentListIndex);
         });
+        // !------- NEXT BUTTON -------
 
         // ------- PREVIOUS BUTTON -------
         previousButton = new JButton("Previous");
         previousButton.addActionListener(e -> {
+            if (wordIndexList == null || wordIndexList.isEmpty()) return;
 
+            // Goes to the end if it's currently at the first index.
+            if(currentListIndex - 1 < 0)
+            {
+                currentListIndex = wordIndexList.size();
+            }
+
+            WordIndex wordIndex = wordIndexList.get(--currentListIndex);
+            highlightMatches(textArea, wordIndex, currentListIndex);
         });
+        // !------- PREVIOUS BUTTON -------
 
         this.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -88,7 +102,6 @@ public class FindMenuItemDialog extends JDialog
         final JPanel checkPanel = new JPanel();
         checkPanel.add(caseInsensitiveCheckBox);
         checkPanel.add(wholeWordCheckBox);
-        checkPanel.add(regexCheckBox);
         checkPanel.setLayout(new FlowLayout());
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -137,30 +150,32 @@ public class FindMenuItemDialog extends JDialog
         this.setVisible(true);
     }
 
-    private void highlightMatches(JTextArea textArea, int textMatchIndex, int localCurrentListIndex)
+    private void highlightMatches(JTextArea textArea, WordIndex wordIndex, int localCurrentListIndex)
     {
         // Clear previous highlights
         removeHighlights(textArea);
         System.out.println(localCurrentListIndex);
-        System.out.println(textMatchIndex);
+        System.out.println(wordIndex.getStart());
+        System.out.println(wordIndex.getEnd());
 
-        for (int index = 0; index < integerList.size(); ++index)
+        for (int index = 0; index < wordIndexList.size(); ++index)
         {
             try
             {
+                final WordIndex temp = wordIndexList.get(index);
                 if(index != localCurrentListIndex)
                 {
                     textArea.getHighlighter().addHighlight(
-                            integerList.get(index),
-                            integerList.get(index) + currentPattern.length(),
+                            temp.getStart(),
+                            temp.getEnd(),
                             new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW)
                     );
                 }
                 else // Highlights the current match in a different way
                 {
                     textArea.getHighlighter().addHighlight(
-                            integerList.get(index),
-                            integerList.get(index) + currentPattern.length(),
+                            temp.getStart(),
+                            temp.getEnd(),
                             new DefaultHighlighter.DefaultHighlightPainter(Color.RED)
                     );
                 }
@@ -171,8 +186,8 @@ public class FindMenuItemDialog extends JDialog
             }
         }
 
-        textArea.setCaretPosition(textMatchIndex);
-        textArea.select(textMatchIndex, textMatchIndex + currentPattern.length());
+        textArea.setCaretPosition(wordIndex.getStart());
+        textArea.select(wordIndex.getStart(), wordIndex.getEnd());
         textArea.grabFocus();
     }
 
