@@ -16,16 +16,20 @@ public class FindMenuItemDialog extends JDialog
         super(frame, "Finder Dialog", JDialog.ModalityType.APPLICATION_MODAL);
 
         JCheckBox caseInsensitiveCheckBox = new JCheckBox("Cc");
+        caseInsensitiveCheckBox.setToolTipText("Case insensitive search.");
         caseInsensitiveCheckBox.setFocusable(false);
         JCheckBox wholeWordCheckBox = new JCheckBox("W");
+        wholeWordCheckBox.setToolTipText("Find whole words only.");
         wholeWordCheckBox.setFocusable(false);
 
         JTextField patternTextField = new JTextField();
-        JButton findButton = new JButton("Find");
 
         wordFinderUtil = new WordFinderUtil(this, textArea, patternTextField, caseInsensitiveCheckBox, wholeWordCheckBox);
 
         // ------- FIND BUTTON -------
+        JButton findButton = new JButton("Find");
+        // Triggers the button when "enter" is pressed.
+        this.getRootPane().setDefaultButton(findButton);
         findButton.addActionListener(e -> wordFinderUtil.find());
 
         // ------- NEXT BUTTON -------

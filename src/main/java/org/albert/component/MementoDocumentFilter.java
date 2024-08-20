@@ -7,7 +7,7 @@ import javax.swing.text.*;
 public class MementoDocumentFilter extends DocumentFilter
 {
     private final TextAreaCaretaker textAreaCaretaker;
-//    private int replaceCount = 0;
+    private boolean justSaved;
 
     public MementoDocumentFilter(TextAreaCaretaker textAreaCaretaker)
     {
@@ -17,7 +17,25 @@ public class MementoDocumentFilter extends DocumentFilter
     @Override
     public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException
     {
-        performStateChange();
+        if (text.isEmpty())
+        {
+            super.replace(fb, offset, length, text, attrs);
+            return;
+        }
+
+        final char c = text.charAt(0);
+        if (text.length() > 1 || (!Character.isLetterOrDigit(c) && !justSaved))
+        {
+            performStateChange();
+//            System.out.println("SAVED");
+            justSaved = true;
+        }
+        // Prevents from loop saving due to repetitive non digit character
+        else if (Character.isLetterOrDigit(c))
+        {
+            justSaved = false;
+        }
+
         super.replace(fb, offset, length, text, attrs);
     }
 

@@ -37,6 +37,7 @@ public class WordFinderUtil
     public void find()
     {
         currentPattern = patternTextField.getText();
+        if (currentPattern.isEmpty()) return;
 
         PatternFinder patternFinder = new PlainPatternFinder();
         if (caseInsensitiveCheckBox.isSelected())
@@ -90,9 +91,9 @@ public class WordFinderUtil
     {
         // Clear previous highlights
         removeHighlights();
-        System.out.println(localCurrentListIndex);
-        System.out.println(wordIndex.getStart());
-        System.out.println(wordIndex.getEnd());
+//        System.out.println(localCurrentListIndex);
+//        System.out.println(wordIndex.getStart());
+//        System.out.println(wordIndex.getEnd());
 
         for (int index = 0; index < wordIndexList.size(); ++index)
         {

@@ -2,18 +2,18 @@ package org.albert.design_patterns.memento;
 
 public class TextAreaMemento
 {
-    private final String text;
+    private final byte[] textBytes;
     private final int caretPosition;
 
-    public TextAreaMemento(String text, int caretPosition)
+    public TextAreaMemento(byte[] textBytes, int caretPosition)
     {
-        this.text = text;
+        this.textBytes = textBytes;
         this.caretPosition = caretPosition;
     }
 
-    public String getText()
+    public byte[] getTextBytes()
     {
-        return text;
+        return textBytes;
     }
 
     public int getCaretPosition()

@@ -121,12 +121,12 @@ public class TextEditor extends JFrame
 
         editMenu = new JMenu("Edit");
         copyMenuItem = new JMenuItem("Copy");
-        // Key conflict
-//        copyMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_DOWN_MASK));
+        // Causes key conflict with existing intellij classes for these keys. Still usable.
+        copyMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_DOWN_MASK));
         cutMenuItem = new JMenuItem("Cut");
-//        cutMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, KeyEvent.CTRL_DOWN_MASK));
+        cutMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, KeyEvent.CTRL_DOWN_MASK));
         pasteMenuItem = new JMenuItem("Paste");
-//        pasteMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.CTRL_DOWN_MASK));
+        pasteMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.CTRL_DOWN_MASK));
 
         // Edit Menu
         copyMenuItem.addActionListener(e -> menuBarCommandInvoker.execute("copy"));
