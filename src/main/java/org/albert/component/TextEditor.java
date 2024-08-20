@@ -1,9 +1,13 @@
 package org.albert.component;
 
 import org.albert.design_patterns.command.invoker.MenuBarCommandInvoker;
+import org.albert.design_patterns.memento.TextAreaCaretaker;
+import org.albert.design_patterns.memento.TextAreaOriginator;
 
 import javax.swing.*;
+import javax.swing.text.AbstractDocument;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 
 public class TextEditor extends JFrame
 {
@@ -26,6 +30,10 @@ public class TextEditor extends JFrame
     private final JMenuItem cutMenuItem;
     private final JMenuItem pasteMenuItem;
     private final JMenuItem findMenuItem;
+    private final JMenuItem undoMenuItem;
+    private final JMenuItem redoMenuItem;
+
+    private final TextAreaCaretaker textAreaCaretaker;
 
     public TextEditor()
     {
@@ -94,7 +102,9 @@ public class TextEditor extends JFrame
 
         fileMenu = new JMenu("File");
         saveMenuItem = new JMenuItem("Save");
+        saveMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK));
         openMenuItem = new JMenuItem("Open");
+        openMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
         exitMenuItem = new JMenuItem("Exit");
 
         MenuBarCommandInvoker menuBarCommandInvoker = new MenuBarCommandInvoker(this, textArea);
@@ -105,12 +115,18 @@ public class TextEditor extends JFrame
 
         fileMenu.add(saveMenuItem);
         fileMenu.add(openMenuItem);
+        // Add a horizontal separator
+        fileMenu.add(new JSeparator());
         fileMenu.add(exitMenuItem);
 
         editMenu = new JMenu("Edit");
         copyMenuItem = new JMenuItem("Copy");
+        // Key conflict
+//        copyMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_DOWN_MASK));
         cutMenuItem = new JMenuItem("Cut");
+//        cutMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, KeyEvent.CTRL_DOWN_MASK));
         pasteMenuItem = new JMenuItem("Paste");
+//        pasteMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.CTRL_DOWN_MASK));
 
         // Edit Menu
         copyMenuItem.addActionListener(e -> menuBarCommandInvoker.execute("copy"));
@@ -121,13 +137,35 @@ public class TextEditor extends JFrame
         editMenu.add(cutMenuItem);
         editMenu.add(pasteMenuItem);
 
+        editMenu.add(new JSeparator());
         // Find Menu Item (PatternFinder)
         findMenuItem = new JMenuItem("Find");
+        findMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK));
         findMenuItem.addActionListener(e -> {
             new FindMenuItemDialog(this, textArea);
         });
 
+        textAreaCaretaker = new TextAreaCaretaker(new TextAreaOriginator(textArea));
+
+        undoMenuItem = new JMenuItem("Undo");
+        undoMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK));
+        undoMenuItem.addActionListener(e -> textAreaCaretaker.undo());
+
+        redoMenuItem = new JMenuItem("Redo");
+        redoMenuItem.setAccelerator(KeyStroke.getKeyStroke(
+                KeyEvent.VK_Z,
+                KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK
+        ));
+        redoMenuItem.addActionListener(e -> textAreaCaretaker.redo());
+
+        // Problem: the DocumentListener executes AFTER the textArea has been updated.
+//        textArea.getDocument().addDocumentListener(new MementoDocumentListener(textAreaCaretaker));
+        AbstractDocument doc = (AbstractDocument) textArea.getDocument();
+        doc.setDocumentFilter(new MementoDocumentFilter(textAreaCaretaker));
+
         editMenu.add(findMenuItem);
+        editMenu.add(undoMenuItem);
+        editMenu.add(redoMenuItem);
 
         menuBar.add(fileMenu);
         menuBar.add(editMenu);
@@ -192,6 +230,5 @@ public class TextEditor extends JFrame
         this.setLocationRelativeTo(null);
         this.setVisible(true);
     }
-
 
 }

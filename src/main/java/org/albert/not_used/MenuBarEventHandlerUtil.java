@@ -1,4 +1,4 @@
-package org.albert.util;
+package org.albert.not_used;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;

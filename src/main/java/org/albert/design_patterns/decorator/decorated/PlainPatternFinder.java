@@ -20,6 +20,8 @@ public class PlainPatternFinder implements PatternFinder
 
         while (matcher.find())
         {
+            // start -> inclusive
+            // end   -> exclusive
             matches.add(new WordIndex(matcher.start(), matcher.end()));
         }
 

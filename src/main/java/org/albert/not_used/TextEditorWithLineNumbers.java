@@ -1,6 +1,6 @@
-package org.albert.component;
+package org.albert.not_used;
 
-import org.albert.event_listener.LineNumberDocumentListener;
+import org.albert.not_used.LineNumberDocumentListener;
 
 import javax.swing.*;
 import java.awt.*;

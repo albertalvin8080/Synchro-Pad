@@ -1,6 +1,6 @@
 //package org.albert.component;
 //
-//import org.albert.util.MenuBarEventHandlerUtil;
+//import org.albert.not_used.MenuBarEventHandlerUtil;
 //
 //import javax.swing.*;
 //import javax.swing.text.*;
