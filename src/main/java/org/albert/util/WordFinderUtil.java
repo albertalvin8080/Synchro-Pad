@@ -37,7 +37,7 @@ public class WordFinderUtil
     public void find()
     {
         currentPattern = patternTextField.getText();
-        if (currentPattern.isEmpty()) return;
+        if (currentPattern.isBlank()) return;
 
         PatternFinder patternFinder = new PlainPatternFinder();
         if (caseInsensitiveCheckBox.isSelected())

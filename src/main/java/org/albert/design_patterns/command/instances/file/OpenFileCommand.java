@@ -1,6 +1,7 @@
 package org.albert.design_patterns.command.instances.file;
 
 
+import org.albert.component.TextEditor;
 import org.albert.design_patterns.command.contract.Command;
 import org.albert.design_patterns.command.invoker.FilePathHolder;
 
@@ -10,11 +11,11 @@ import java.util.stream.Collectors;
 
 public class OpenFileCommand implements Command
 {
-    private final JFrame frame;
+    private final TextEditor frame;
     private final JTextArea textArea;
     private final FilePathHolder filePathHolder;
 
-    public OpenFileCommand(JFrame frame, JTextArea textArea, FilePathHolder filePathHolder)
+    public OpenFileCommand(TextEditor frame, JTextArea textArea, FilePathHolder filePathHolder)
     {
         this.frame = frame;
         this.textArea = textArea;
@@ -34,6 +35,7 @@ public class OpenFileCommand implements Command
         {
             file = new File(fileChooser.getSelectedFile().getAbsolutePath());
             filePathHolder.setCurrentFilePath(file.getAbsolutePath());
+            frame.changeTitle(file.getName());
 
             try (FileReader fr = new FileReader(file);
                  BufferedReader br = new BufferedReader(fr))

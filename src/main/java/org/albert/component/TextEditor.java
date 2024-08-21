@@ -5,6 +5,8 @@ import org.albert.design_patterns.memento.TextAreaCaretaker;
 import org.albert.design_patterns.memento.TextAreaOriginator;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.AbstractDocument;
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -34,6 +36,14 @@ public class TextEditor extends JFrame
     private final JMenuItem redoMenuItem;
 
     private final TextAreaCaretaker textAreaCaretaker;
+    private final String baseTitle = "Swing Editor";
+
+    private enum TitleStates
+    {
+        NOT_MODIFIED, MODIFIED
+    }
+
+    private TitleStates titleState = TitleStates.MODIFIED;
 
     public TextEditor()
     {
@@ -109,8 +119,22 @@ public class TextEditor extends JFrame
 
         MenuBarCommandInvoker menuBarCommandInvoker = new MenuBarCommandInvoker(this, textArea);
         // File Menu
-        saveMenuItem.addActionListener(e -> menuBarCommandInvoker.execute("save"));
-        openMenuItem.addActionListener(e -> menuBarCommandInvoker.execute("open"));
+        saveMenuItem.addActionListener(e -> {
+            menuBarCommandInvoker.execute("save");
+            if (this.getTitle().contains("*"))
+            {
+                this.setTitle(this.getTitle().substring(1));
+            }
+            titleState = TitleStates.NOT_MODIFIED;
+        });
+        openMenuItem.addActionListener(e -> {
+            menuBarCommandInvoker.execute("open");
+            if (this.getTitle().contains("*"))
+            {
+                this.setTitle(this.getTitle().substring(1));
+            }
+            titleState = TitleStates.NOT_MODIFIED;
+        });
         exitMenuItem.addActionListener(e -> menuBarCommandInvoker.execute("exit"));
 
         fileMenu.add(saveMenuItem);
@@ -137,16 +161,9 @@ public class TextEditor extends JFrame
         editMenu.add(cutMenuItem);
         editMenu.add(pasteMenuItem);
 
-        editMenu.add(new JSeparator());
-        // Find Menu Item (PatternFinder)
-        findMenuItem = new JMenuItem("Find");
-        findMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK));
-        findMenuItem.addActionListener(e -> {
-            new FindMenuItemDialog(this, textArea);
-        });
-
         textAreaCaretaker = new TextAreaCaretaker(new TextAreaOriginator(textArea));
 
+        editMenu.add(new JSeparator());
         undoMenuItem = new JMenuItem("Undo");
         undoMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK));
         undoMenuItem.addActionListener(e -> textAreaCaretaker.undo());
@@ -162,10 +179,19 @@ public class TextEditor extends JFrame
 //        textArea.getDocument().addDocumentListener(new MementoDocumentListener(textAreaCaretaker));
         AbstractDocument doc = (AbstractDocument) textArea.getDocument();
         doc.setDocumentFilter(new MementoDocumentFilter(textAreaCaretaker));
+        textArea.getDocument().addDocumentListener(new TitleChangeDocumentListener());
 
-        editMenu.add(findMenuItem);
         editMenu.add(undoMenuItem);
         editMenu.add(redoMenuItem);
+
+        editMenu.add(new JSeparator());
+        // Find Menu Item (PatternFinder)
+        findMenuItem = new JMenuItem("Find");
+        findMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK));
+        findMenuItem.addActionListener(e -> {
+            new FindMenuItemDialog(this, textArea);
+        });
+        editMenu.add(findMenuItem);
 
         menuBar.add(fileMenu);
         menuBar.add(editMenu);
@@ -225,10 +251,59 @@ public class TextEditor extends JFrame
         // !------- FRAME LAYOUT -------
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setSize(600, 600);
         this.setBackground(Color.LIGHT_GRAY);
         this.setLocationRelativeTo(null);
+        this.setSize(700, 700);
+        this.setTitle(baseTitle);
         this.setVisible(true);
     }
 
+    public void changeTitle(String fileName)
+    {
+        this.setTitle(fileName + " - " + baseTitle);
+    }
+
+    public void updateTitle()
+    {
+        final String temp = this.getTitle();
+        // Find the index of "- " (which separates the filename from the editor name)
+        final int index = temp.indexOf("- ");
+
+        if (index != -1)
+        {
+            StringBuilder newTitle = new StringBuilder(temp);
+            newTitle.insert(0, '*');
+            this.setTitle(newTitle.toString());
+        }
+    }
+
+    private class TitleChangeDocumentListener implements DocumentListener
+    {
+        @Override
+        public void insertUpdate(DocumentEvent e)
+        {
+            updateTitleIfNeeded();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e)
+        {
+            updateTitleIfNeeded();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e)
+        {
+            updateTitleIfNeeded();
+        }
+
+        private void updateTitleIfNeeded()
+        {
+            if (titleState == TitleStates.NOT_MODIFIED)
+            {
+                updateTitle();
+                titleState = TitleStates.MODIFIED;
+            }
+        }
+    }
 }

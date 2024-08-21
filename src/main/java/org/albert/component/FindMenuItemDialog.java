@@ -4,6 +4,8 @@ import org.albert.util.WordFinderUtil;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -28,6 +30,7 @@ public class FindMenuItemDialog extends JDialog
 
         // ------- FIND BUTTON -------
         JButton findButton = new JButton("Find");
+        findButton.setFocusable(false);
         // Triggers the button when "enter" is pressed.
         this.getRootPane().setDefaultButton(findButton);
         findButton.addActionListener(e -> wordFinderUtil.find());
@@ -35,10 +38,30 @@ public class FindMenuItemDialog extends JDialog
         // ------- NEXT BUTTON -------
         JButton nextButton = new JButton("Next");
         nextButton.addActionListener(e -> wordFinderUtil.next());
+        nextButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke("DOWN"), "nextArrowPressed");
+        nextButton.getActionMap().put("nextArrowPressed", new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                nextButton.doClick();
+            }
+        });
 
         // ------- PREVIOUS BUTTON -------
         JButton previousButton = new JButton("Previous");
         previousButton.addActionListener(e -> wordFinderUtil.previous());
+        previousButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke("UP"), "previousArrowPressed");
+        previousButton.getActionMap().put("previousArrowPressed", new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                previousButton.doClick();
+            }
+        });
 
         this.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -71,8 +94,8 @@ public class FindMenuItemDialog extends JDialog
 
         // next and previous buttons
         final JPanel nextAndPreviousPanel = new JPanel();
-        nextAndPreviousPanel.add(nextButton);
         nextAndPreviousPanel.add(previousButton);
+        nextAndPreviousPanel.add(nextButton);
         nextAndPreviousPanel.setLayout(new FlowLayout());
         gbc.gridx = 0;
         gbc.gridy = 2;

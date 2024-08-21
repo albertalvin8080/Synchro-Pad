@@ -1,6 +1,7 @@
 package org.albert.design_patterns.command.instances.file;
 
 
+import org.albert.component.TextEditor;
 import org.albert.design_patterns.command.contract.Command;
 import org.albert.design_patterns.command.invoker.FilePathHolder;
 
@@ -12,11 +13,11 @@ import java.io.IOException;
 
 public class SaveFileCommand implements Command
 {
-    private final JFrame frame;
+    private final TextEditor frame;
     private final JTextArea textArea;
     private final FilePathHolder filePathHolder;
 
-    public SaveFileCommand(JFrame frame, JTextArea textArea, FilePathHolder filePathHolder)
+    public SaveFileCommand(TextEditor frame, JTextArea textArea, FilePathHolder filePathHolder)
     {
         this.frame = frame;
         this.textArea = textArea;
@@ -48,6 +49,7 @@ public class SaveFileCommand implements Command
 
             file = new File(selectedFile.getAbsolutePath());
             filePathHolder.setCurrentFilePath(selectedFile.getAbsolutePath());
+            frame.changeTitle(file.getName());
         }
 
         if (option == JFileChooser.APPROVE_OPTION)

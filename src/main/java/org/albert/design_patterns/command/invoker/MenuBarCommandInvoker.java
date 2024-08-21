@@ -1,5 +1,6 @@
 package org.albert.design_patterns.command.invoker;
 
+import org.albert.component.TextEditor;
 import org.albert.design_patterns.command.contract.Command;
 import org.albert.design_patterns.command.instances.edit.CopyCommand;
 import org.albert.design_patterns.command.instances.edit.CutCommand;
@@ -16,7 +17,7 @@ public class MenuBarCommandInvoker
 {
     private final Map<String, Command> commandMap;
 
-    public MenuBarCommandInvoker(JFrame frame, JTextArea textArea)
+    public MenuBarCommandInvoker(TextEditor frame, JTextArea textArea)
     {
         this.commandMap = new HashMap<>();
         final FilePathHolder filePathHolder = new FilePathHolder();
