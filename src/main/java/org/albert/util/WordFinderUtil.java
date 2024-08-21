@@ -55,6 +55,7 @@ public class WordFinderUtil
         }
         else
         {
+            removeHighlights();
             JOptionPane.showMessageDialog(findMenuItemDialog, "Pattern not found!", "Find", JOptionPane.INFORMATION_MESSAGE);
         }
     }

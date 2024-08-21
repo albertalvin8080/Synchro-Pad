@@ -1,8 +1,8 @@
-package org.albert.component;
+package org.albert.design_patterns.memento;
 
-import org.albert.design_patterns.memento.TextAreaCaretaker;
-
-import javax.swing.text.*;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
 
 public class MementoDocumentFilter extends DocumentFilter
 {

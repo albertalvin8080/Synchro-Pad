@@ -3,6 +3,7 @@ package org.albert.component;
 import org.albert.design_patterns.command.invoker.MenuBarCommandInvoker;
 import org.albert.design_patterns.memento.TextAreaCaretaker;
 import org.albert.design_patterns.memento.TextAreaOriginator;
+import org.albert.design_patterns.memento.MementoDocumentFilter;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
