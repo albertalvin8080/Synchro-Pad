@@ -24,26 +24,20 @@ public class MementoDocumentFilter extends DocumentFilter
         System.out.println("offset: " + offset);
         System.out.println("length: " + length);
         System.out.println("text: " + text);
-//        if (text.isEmpty())
-//        {
-//            super.replace(fb, offset, length, text, attrs);
-//            return;
-//        }
-//
-//        final char c = text.charAt(0);
-//        if (text.length() > 1 || (!Character.isLetterOrDigit(c) && !justSaved))
-//        {
-//            performStateChange(offset, length, text, OperationType.INSERT);
-////            System.out.println("SAVED");
-//            justSaved = true;
-//        }
-//        // Prevents from loop saving due to repetitive non digit character
-//        else if (Character.isLetterOrDigit(c))
-//        {
-//            justSaved = false;
-//        }
 
-        performStateChange(offset, length, text, OperationType.INSERT);
+        if (text.isEmpty())
+        {
+            super.replace(fb, offset, length, text, attrs);
+            return;
+        }
+
+        final char c = text.charAt(0);
+        if (!Character.isWhitespace(c))
+        {
+            performStateChange(offset, length, text, OperationType.INSERT);
+            System.out.println("SAVED");
+        }
+
         super.replace(fb, offset, length, text, attrs);
     }
 
@@ -69,6 +63,11 @@ public class MementoDocumentFilter extends DocumentFilter
         {
             textAreaCaretaker.saveState(offset, length, text, operationType);
         }
+    }
+
+    public TextAreaCaretaker getTextAreaCaretaker()
+    {
+        return textAreaCaretaker;
     }
 
     //    @Override

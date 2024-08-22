@@ -7,7 +7,7 @@ import java.util.Deque;
 
 public class TextAreaCaretaker
 {
-    private static final int MAX_SIZE = 30;
+    private static final int MAX_SIZE = 50;
 
     private boolean stateChange;
 
@@ -36,10 +36,10 @@ public class TextAreaCaretaker
             stateChange = true;
             TextAreaMemento memento = undoDeque.pop();
             redoDeque.push(originator.createMemento(
-                    memento.getOffset(),
-                    memento.getLength(),
-                    memento.getText(),
-                    memento.getOperationType() == OperationType.INSERT ?
+                    memento.offset,
+                    memento.length,
+                    memento.text,
+                    memento.operationType == OperationType.INSERT ?
                             OperationType.DELETE : OperationType.INSERT
             ));
             originator.restoreMemento(memento);
@@ -54,10 +54,10 @@ public class TextAreaCaretaker
             stateChange = true;
             TextAreaMemento memento = redoDeque.pop();
             undoDeque.push(originator.createMemento(
-                    memento.getOffset(),
-                    memento.getLength(),
-                    memento.getText(),
-                    memento.getOperationType() == OperationType.INSERT ?
+                    memento.offset,
+                    memento.length,
+                    memento.text,
+                    memento.operationType == OperationType.INSERT ?
                             OperationType.DELETE : OperationType.INSERT
             ));
             originator.restoreMemento(memento);
@@ -81,5 +81,11 @@ public class TextAreaCaretaker
     public void setStateChange(boolean stateChange)
     {
         this.stateChange = stateChange;
+    }
+
+    public void clearAll()
+    {
+        undoDeque.clear();
+        redoDeque.clear();
     }
 }

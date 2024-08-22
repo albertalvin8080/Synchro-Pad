@@ -128,6 +128,16 @@ public class TextEditor extends JFrame
             }
             titleState = TitleStates.NOT_MODIFIED;
         });
+
+        textAreaCaretaker = new TextAreaCaretaker(new TextAreaOriginator(textArea));
+
+        // Problem: the DocumentListener executes AFTER the textArea has been updated.
+//        textArea.getDocument().addDocumentListener(new MementoDocumentListener(textAreaCaretaker));
+        AbstractDocument doc = (AbstractDocument) textArea.getDocument();
+        final MementoDocumentFilter mementoDocumentFilter = new MementoDocumentFilter(textAreaCaretaker);
+        doc.setDocumentFilter(mementoDocumentFilter);
+        textArea.getDocument().addDocumentListener(new TitleChangeDocumentListener());
+
         openMenuItem.addActionListener(e -> {
             menuBarCommandInvoker.execute("open");
             if (this.getTitle().contains("*"))
@@ -135,6 +145,8 @@ public class TextEditor extends JFrame
                 this.setTitle(this.getTitle().substring(1));
             }
             titleState = TitleStates.NOT_MODIFIED;
+            // Prevents errors due to undo/redo of previous versions of the document before opening a new one.
+            mementoDocumentFilter.getTextAreaCaretaker().clearAll();
         });
         exitMenuItem.addActionListener(e -> menuBarCommandInvoker.execute("exit"));
 
@@ -162,8 +174,6 @@ public class TextEditor extends JFrame
         editMenu.add(cutMenuItem);
         editMenu.add(pasteMenuItem);
 
-        textAreaCaretaker = new TextAreaCaretaker(new TextAreaOriginator(textArea));
-
         editMenu.add(new JSeparator());
         undoMenuItem = new JMenuItem("Undo");
         undoMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK));
@@ -175,12 +185,6 @@ public class TextEditor extends JFrame
                 KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK
         ));
         redoMenuItem.addActionListener(e -> textAreaCaretaker.redo());
-
-        // Problem: the DocumentListener executes AFTER the textArea has been updated.
-//        textArea.getDocument().addDocumentListener(new MementoDocumentListener(textAreaCaretaker));
-        AbstractDocument doc = (AbstractDocument) textArea.getDocument();
-        doc.setDocumentFilter(new MementoDocumentFilter(textAreaCaretaker));
-        textArea.getDocument().addDocumentListener(new TitleChangeDocumentListener());
 
         editMenu.add(undoMenuItem);
         editMenu.add(redoMenuItem);
@@ -253,7 +257,7 @@ public class TextEditor extends JFrame
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setBackground(Color.LIGHT_GRAY);
-        this.setLocationRelativeTo(null);
+//        this.setLocationRelativeTo(null);
         this.setSize(700, 700);
         this.setTitle(baseTitle);
         this.setVisible(true);

@@ -4,11 +4,11 @@ import org.albert.util.OperationType;
 
 public class TextAreaMemento
 {
-    private final int offset;
-    private final int length;
-    private final String text;
-    private final OperationType operationType;
-    private final int caretPosition;
+    final int offset;
+    final int length;
+    final String text;
+    final OperationType operationType;
+    final int caretPosition;
 
     public TextAreaMemento(int offset, int length, String text, OperationType operationType, int caretPosition)
     {
@@ -19,28 +19,4 @@ public class TextAreaMemento
         this.caretPosition = caretPosition;
     }
 
-    public int getCaretPosition()
-    {
-        return caretPosition;
-    }
-
-    public int getOffset()
-    {
-        return offset;
-    }
-
-    public int getLength()
-    {
-        return length;
-    }
-
-    public String getText()
-    {
-        return text;
-    }
-
-    public OperationType getOperationType()
-    {
-        return operationType;
-    }
 }
