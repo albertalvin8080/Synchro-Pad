@@ -18,5 +18,4 @@ public class TextAreaMemento
         this.operationType = operationType;
         this.caretPosition = caretPosition;
     }
-
 }

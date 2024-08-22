@@ -18,9 +18,7 @@ public class TextEditor extends JFrame
     private final JScrollPane scrollPane;
 
     private final JSpinner spinner;
-    private final JButton colorButton;
     private final JLabel spinnerLabel;
-    private final JComboBox<String> fontComboBox;
     private final JCheckBox wordWrapCheckBox;
 
     private final JMenuBar menuBar;
@@ -35,6 +33,10 @@ public class TextEditor extends JFrame
     private final JMenuItem findMenuItem;
     private final JMenuItem undoMenuItem;
     private final JMenuItem redoMenuItem;
+    private final JMenu formatMenu;
+    private final JMenuItem fontFormatMenuItem;
+    private final JMenuItem upperCaseMenuItem;
+    private final JMenuItem lowerCaseMenuItem;
 
     private final TextAreaCaretaker textAreaCaretaker;
     private final String baseTitle = "Swing Editor";
@@ -58,45 +60,13 @@ public class TextEditor extends JFrame
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
         // ------- SPINNER -------
-        spinnerLabel = new JLabel("Font:");
+        spinnerLabel = new JLabel("FS");
         spinner = new JSpinner();
         spinner.setValue(20);
         spinner.addChangeListener(e -> {
             final Font font = textArea.getFont();
             final int value = (int) spinner.getValue();
-            textArea.setFont(new Font(
-                    font.getFontName(),
-                    font.getStyle(),
-                    value
-            ));
-        });
-
-        // ------- COLOR BUTTON -------
-        colorButton = new JButton();
-        colorButton.setBackground(Color.WHITE);
-        int colorButtonWidth = 25;
-        int colorButtonHeight = 25;
-        colorButton.setPreferredSize(new Dimension(colorButtonWidth, colorButtonHeight));
-        final Image scaledInstance = new ImageIcon("src/main/resources/colors.png").getImage().getScaledInstance(colorButtonWidth, colorButtonHeight, Image.SCALE_SMOOTH);
-        colorButton.setIcon(new ImageIcon(scaledInstance));
-        colorButton.addActionListener(e -> {
-            final Color color = JColorChooser.showDialog(this, "Choose a color", Color.BLACK);
-            textArea.setForeground(color);
-        });
-
-        // ------- COMBOBOX -------
-        String[] fonts = GraphicsEnvironment
-                .getLocalGraphicsEnvironment()
-                .getAvailableFontFamilyNames();
-        fontComboBox = new JComboBox<>(fonts);
-        fontComboBox.setSelectedItem("Arial");
-        fontComboBox.addActionListener(e -> {
-            Font font = textArea.getFont();
-            textArea.setFont(new Font(
-                    (String) fontComboBox.getSelectedItem(),
-                    font.getStyle(),
-                    font.getSize()
-            ));
+            textArea.setFont(new Font(font.getFontName(), font.getStyle(), value));
         });
 
         // ------- WORD WRAP BUTTON -------
@@ -180,10 +150,7 @@ public class TextEditor extends JFrame
         undoMenuItem.addActionListener(e -> textAreaCaretaker.undo());
 
         redoMenuItem = new JMenuItem("Redo");
-        redoMenuItem.setAccelerator(KeyStroke.getKeyStroke(
-                KeyEvent.VK_Z,
-                KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK
-        ));
+        redoMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK));
         redoMenuItem.addActionListener(e -> textAreaCaretaker.redo());
 
         editMenu.add(undoMenuItem);
@@ -198,8 +165,65 @@ public class TextEditor extends JFrame
         });
         editMenu.add(findMenuItem);
 
+        // Format Menu
+        formatMenu = new JMenu("Format");
+
+        fontFormatMenuItem = new JMenuItem("Font");
+        fontFormatMenuItem.setAccelerator(KeyStroke.getKeyStroke(
+                KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK
+        ));
+        fontFormatMenuItem.addActionListener(e -> {
+            new FontFormatDialog(this, textArea);
+        });
+        formatMenu.add(fontFormatMenuItem);
+
+        upperCaseMenuItem = new JMenuItem("UpperCase");
+        upperCaseMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_U, KeyEvent.CTRL_DOWN_MASK));
+        upperCaseMenuItem.addActionListener(e -> {
+            int start = textArea.getSelectionStart();
+            int end = textArea.getSelectionEnd();
+
+            // Ensures that there is a selection
+            if (start != end)
+            {
+                String selectedText = textArea.getSelectedText();
+
+                String upperText = selectedText.toUpperCase();
+                StringBuilder text = new StringBuilder(textArea.getText());
+                textArea.setText(text.toString());
+                text.replace(start, end, upperText);
+                textArea.setText(text.toString());
+                textArea.setSelectionStart(start);
+                textArea.setSelectionEnd(start + upperText.length());
+            }
+        });
+        formatMenu.add(upperCaseMenuItem);
+
+        lowerCaseMenuItem = new JMenuItem("LowerCase");
+        lowerCaseMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, KeyEvent.CTRL_DOWN_MASK));
+        lowerCaseMenuItem.addActionListener(e -> {
+            int start = textArea.getSelectionStart();
+            int end = textArea.getSelectionEnd();
+
+            // Ensures that there is a selection
+            if (start != end)
+            {
+                String selectedText = textArea.getSelectedText();
+
+                String upperText = selectedText.toLowerCase();
+                StringBuilder text = new StringBuilder(textArea.getText());
+                textArea.setText(text.toString());
+                text.replace(start, end, upperText);
+                textArea.setText(text.toString());
+                textArea.setSelectionStart(start);
+                textArea.setSelectionEnd(start + upperText.length());
+            }
+        });
+        formatMenu.add(lowerCaseMenuItem);
+
         menuBar.add(fileMenu);
         menuBar.add(editMenu);
+        menuBar.add(formatMenu);
         this.setJMenuBar(menuBar);
         // !------- MENU BAR -------
 
@@ -208,42 +232,19 @@ public class TextEditor extends JFrame
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // Add spinnerLabel
+        final JPanel panel = new JPanel();
+//        panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+        panel.add(spinnerLabel);
+        panel.add(spinner);
+        panel.add(wordWrapCheckBox);
+
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.weightx = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        this.add(spinnerLabel, gbc);
-
-        // Add spinner
-        gbc.gridx = 1;
-        gbc.gridy = 0;
-        gbc.weightx = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        this.add(spinner, gbc);
-
-        // Add colorButton
-        gbc.gridx = 2;
-        gbc.gridy = 0;
-        gbc.weightx = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        this.add(colorButton, gbc);
-
-        // Add wordWrapButton
-        gbc.gridx = 3;
-        gbc.gridy = 0;
-        gbc.weightx = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        this.add(wordWrapCheckBox, gbc);
-
-        // Add fontComboBox
-        gbc.gridx = 4;
-        gbc.gridy = 0;
-        gbc.weightx = 1;
+        gbc.weightx = 1.0;
+        gbc.weighty = 0;
         gbc.gridwidth = GridBagConstraints.REMAINDER;
-        gbc.fill = GridBagConstraints.NONE;
-//        gbc.fill = GridBagConstraints.BOTH;
-        this.add(fontComboBox, gbc);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        this.add(panel, gbc);
 
         // Add scrollPane
         gbc.gridx = 0;

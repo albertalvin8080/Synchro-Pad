@@ -9,7 +9,6 @@ import javax.swing.text.DocumentFilter;
 public class MementoDocumentFilter extends DocumentFilter
 {
     private final TextAreaCaretaker textAreaCaretaker;
-    private boolean justSaved;
 
     public MementoDocumentFilter(TextAreaCaretaker textAreaCaretaker)
     {
@@ -31,12 +30,17 @@ public class MementoDocumentFilter extends DocumentFilter
             return;
         }
 
-        final char c = text.charAt(0);
-        if (!Character.isWhitespace(c))
-        {
-            performStateChange(offset, length, text, OperationType.INSERT);
-            System.out.println("SAVED");
-        }
+//        final char c = text.charAt(0);
+        // Causes conflict when characters are not inserted at the end.
+        // The presence of the whitespace characters is necessary to avoid it.
+//        if (!Character.isWhitespace(c))
+//        {
+//            performStateChange(offset, length, text, OperationType.INSERT);
+//            System.out.println("INSERTED");
+//        }
+
+        performStateChange(offset, length, text, OperationType.INSERT);
+        System.out.println("INSERTED");
 
         super.replace(fb, offset, length, text, attrs);
     }
@@ -49,6 +53,7 @@ public class MementoDocumentFilter extends DocumentFilter
         System.out.println("offset: " + offset);
         System.out.println("length: " + length);
         performStateChange(offset, length, null, OperationType.DELETE);
+        System.out.println("DELETED");
         super.remove(fb, offset, length);
     }
 
