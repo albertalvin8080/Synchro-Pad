@@ -1,5 +1,7 @@
 package org.albert.design_patterns.memento;
 
+import org.albert.util.OperationType;
+
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -20,9 +22,9 @@ public class TextAreaCaretaker
         this.redoDeque = new ArrayDeque<>();
     }
 
-    public void saveState()
+    public void saveState(int offset, int length, String text, OperationType operationType)
     {
-        undoDeque.push(originator.createMemento());
+        undoDeque.push(originator.createMemento(offset, length, text, operationType));
         redoDeque.clear(); // Clear redo stack when new actions are performed
         checkSize();
     }
@@ -32,8 +34,14 @@ public class TextAreaCaretaker
         if (!undoDeque.isEmpty())
         {
             stateChange = true;
-            redoDeque.push(originator.createMemento());
             TextAreaMemento memento = undoDeque.pop();
+            redoDeque.push(originator.createMemento(
+                    memento.getOffset(),
+                    memento.getLength(),
+                    memento.getText(),
+                    memento.getOperationType() == OperationType.INSERT ?
+                            OperationType.DELETE : OperationType.INSERT
+            ));
             originator.restoreMemento(memento);
             checkSize();
         }
@@ -44,8 +52,14 @@ public class TextAreaCaretaker
         if (!redoDeque.isEmpty())
         {
             stateChange = true;
-            undoDeque.push(originator.createMemento());
             TextAreaMemento memento = redoDeque.pop();
+            undoDeque.push(originator.createMemento(
+                    memento.getOffset(),
+                    memento.getLength(),
+                    memento.getText(),
+                    memento.getOperationType() == OperationType.INSERT ?
+                            OperationType.DELETE : OperationType.INSERT
+            ));
             originator.restoreMemento(memento);
             checkSize();
         }

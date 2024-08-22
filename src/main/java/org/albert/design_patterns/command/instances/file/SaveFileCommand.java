@@ -57,7 +57,10 @@ public class SaveFileCommand implements Command
             try (FileWriter fr = new FileWriter(file);
                  BufferedWriter bw = new BufferedWriter(fr))
             {
-                bw.write(textArea.getText());
+                String content = textArea.getText();
+                // This converts '\n' to the platform's line separator
+                content = content.replaceAll("\n", System.lineSeparator());
+                bw.write(content);
             }
             catch (IOException ex)
             {

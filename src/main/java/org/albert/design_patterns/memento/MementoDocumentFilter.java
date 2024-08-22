@@ -1,5 +1,7 @@
 package org.albert.design_patterns.memento;
 
+import org.albert.util.OperationType;
+
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
@@ -17,38 +19,55 @@ public class MementoDocumentFilter extends DocumentFilter
     @Override
     public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException
     {
-        if (text.isEmpty())
-        {
-            super.replace(fb, offset, length, text, attrs);
-            return;
-        }
+        System.out.println("--------------------------");
+        System.out.println("REPLACE");
+        System.out.println("offset: " + offset);
+        System.out.println("length: " + length);
+        System.out.println("text: " + text);
+//        if (text.isEmpty())
+//        {
+//            super.replace(fb, offset, length, text, attrs);
+//            return;
+//        }
+//
+//        final char c = text.charAt(0);
+//        if (text.length() > 1 || (!Character.isLetterOrDigit(c) && !justSaved))
+//        {
+//            performStateChange(offset, length, text, OperationType.INSERT);
+////            System.out.println("SAVED");
+//            justSaved = true;
+//        }
+//        // Prevents from loop saving due to repetitive non digit character
+//        else if (Character.isLetterOrDigit(c))
+//        {
+//            justSaved = false;
+//        }
 
-        final char c = text.charAt(0);
-        if (text.length() > 1 || (!Character.isLetterOrDigit(c) && !justSaved))
-        {
-            performStateChange();
-//            System.out.println("SAVED");
-            justSaved = true;
-        }
-        // Prevents from loop saving due to repetitive non digit character
-        else if (Character.isLetterOrDigit(c))
-        {
-            justSaved = false;
-        }
-
+        performStateChange(offset, length, text, OperationType.INSERT);
         super.replace(fb, offset, length, text, attrs);
     }
 
-    private void performStateChange()
+    @Override
+    public void remove(FilterBypass fb, int offset, int length) throws BadLocationException
     {
-        // Prevents saving the old state as a new state.
+        System.out.println("--------------------------");
+        System.out.println("REMOVE");
+        System.out.println("offset: " + offset);
+        System.out.println("length: " + length);
+        performStateChange(offset, length, null, OperationType.DELETE);
+        super.remove(fb, offset, length);
+    }
+
+    private void performStateChange(int offset, int length, String text, OperationType operationType)
+    {
+//         Prevents saving the old state as a new state.
         if (textAreaCaretaker.getStateChange())
         {
             textAreaCaretaker.setStateChange(false);
         }
         else
         {
-            textAreaCaretaker.saveState();
+            textAreaCaretaker.saveState(offset, length, text, operationType);
         }
     }
 
@@ -58,13 +77,5 @@ public class MementoDocumentFilter extends DocumentFilter
 //        System.out.println("INSERT");
 //        performStateChange();
 //        super.insertString(fb, offset, string, attr);
-//    }
-//
-//    @Override
-//    public void remove(FilterBypass fb, int offset, int length) throws BadLocationException
-//    {
-//        System.out.println("REMOVE");
-//        performStateChange();
-//        super.remove(fb, offset, length);
 //    }
 }

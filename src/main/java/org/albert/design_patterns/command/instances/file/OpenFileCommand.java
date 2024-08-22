@@ -40,8 +40,13 @@ public class OpenFileCommand implements Command
             try (FileReader fr = new FileReader(file);
                  BufferedReader br = new BufferedReader(fr))
             {
-                final String collect = br.lines().collect(Collectors.joining(System.lineSeparator()));
-                textArea.setText(collect);
+                StringBuilder content = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null)
+                {
+                    content.append(line).append("\n"); // Avoiding Windows's "\r\n"
+                }
+                textArea.setText(content.toString());
             }
             catch (IOException ex)
             {

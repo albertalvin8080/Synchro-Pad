@@ -1,29 +1,55 @@
 package org.albert.design_patterns.memento;
 
+import org.albert.util.OperationType;
+
 import javax.swing.*;
-import java.nio.charset.StandardCharsets;
 
 public class TextAreaOriginator
 {
     private final JTextArea textArea;
-//    private byte[] lastTextBytes;
 
     public TextAreaOriginator(JTextArea textArea)
     {
         this.textArea = textArea;
     }
 
-    public TextAreaMemento createMemento()
+    public TextAreaMemento createMemento(int offset, int length, String text, OperationType operationType)
     {
+        if(operationType == OperationType.INSERT)
+        {
+            length = text.length();
+        }
+        else if(operationType == OperationType.DELETE && text == null)
+        {
+            // Necessary because remove() from the filter doesn't return the string being removed.
+            text = textArea.getText().substring(offset, offset + length);
+        }
+
         return new TextAreaMemento(
-                textArea.getText().getBytes(StandardCharsets.UTF_8),
-                textArea.getCaretPosition()
+                offset, length, text, operationType, textArea.getCaretPosition()
         );
     }
 
     public void restoreMemento(TextAreaMemento memento)
     {
-        textArea.setText(new String(memento.getTextBytes(), StandardCharsets.UTF_8));
+        // WARNING: if the operation was INSERT, then you need to remove from the textArea.
+        // WARNING: if the operation was DELETE, then you need to insert into the textArea.
+        if (memento.getOperationType() == OperationType.INSERT)
+        {
+            final StringBuilder sb = new StringBuilder(textArea.getText());
+            final int offset = memento.getOffset();
+            final int length = memento.getLength();
+            sb.delete(offset, offset + length);
+            textArea.setText(sb.toString());
+        }
+        else if(memento.getOperationType() == OperationType.DELETE)
+        {
+            final StringBuilder sb = new StringBuilder(textArea.getText());
+            final int offset = memento.getOffset();
+            final String text = memento.getText();
+            sb.insert(offset, text);
+            textArea.setText(sb.toString());
+        }
         textArea.setCaretPosition(memento.getCaretPosition());
     }
 }

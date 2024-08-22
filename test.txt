@@ -8,8 +8,6 @@ testing
 
 TESTING
 
-dsadsadsadsa
-
 test
 
 test
@@ -18,15 +16,11 @@ TEST
 
 testing
 
+ops
+
 TESTING
 
 test
-
-dsadsadsadsa
-
-memento mori
-
-TEST
 
 testing
 
@@ -36,6 +30,7 @@ test
 
 test
 
+sadsadsad
 TEST
 
 testing
