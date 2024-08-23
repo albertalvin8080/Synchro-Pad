@@ -1,4 +1,6 @@
-package org.albert.design_patterns.memento;
+package org.albert.design_patterns.memento_v2;
+
+import org.albert.util.OperationType;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -20,9 +22,9 @@ public class TextAreaCaretaker
         this.redoDeque = new ArrayDeque<>();
     }
 
-    public void saveState()
+    public void saveState(int offset, int length, String text, OperationType operationType)
     {
-        undoDeque.push(originator.createMemento());
+        undoDeque.push(originator.createMemento(offset, length, text, operationType));
         redoDeque.clear(); // Clear redo stack when new actions are performed
         checkSize();
     }
@@ -33,7 +35,13 @@ public class TextAreaCaretaker
         {
             stateChange = true;
             TextAreaMemento memento = undoDeque.pop();
-            redoDeque.push(originator.createMemento());
+            redoDeque.push(originator.createMemento(
+                    memento.offset,
+                    memento.length,
+                    memento.text,
+                    memento.operationType == OperationType.INSERT ?
+                            OperationType.DELETE : OperationType.INSERT
+            ));
             originator.restoreMemento(memento);
             checkSize();
         }
@@ -45,7 +53,13 @@ public class TextAreaCaretaker
         {
             stateChange = true;
             TextAreaMemento memento = redoDeque.pop();
-            undoDeque.push(originator.createMemento());
+            undoDeque.push(originator.createMemento(
+                    memento.offset,
+                    memento.length,
+                    memento.text,
+                    memento.operationType == OperationType.INSERT ?
+                            OperationType.DELETE : OperationType.INSERT
+            ));
             originator.restoreMemento(memento);
             checkSize();
         }
@@ -69,4 +83,9 @@ public class TextAreaCaretaker
         this.stateChange = stateChange;
     }
 
+    public void clearAll()
+    {
+        undoDeque.clear();
+        redoDeque.clear();
+    }
 }

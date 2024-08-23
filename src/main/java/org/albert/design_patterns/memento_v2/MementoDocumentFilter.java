@@ -1,4 +1,6 @@
-package org.albert.design_patterns.memento;
+package org.albert.design_patterns.memento_v2;
+
+import org.albert.util.OperationType;
 
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
@@ -7,8 +9,6 @@ import javax.swing.text.DocumentFilter;
 public class MementoDocumentFilter extends DocumentFilter
 {
     private final TextAreaCaretaker textAreaCaretaker;
-    private boolean justSaved;
-    private int deletedCount;
 
     public MementoDocumentFilter(TextAreaCaretaker textAreaCaretaker)
     {
@@ -30,18 +30,17 @@ public class MementoDocumentFilter extends DocumentFilter
             return;
         }
 
-        final char c = text.charAt(0);
-        if (text.length() > 1 || (!Character.isLetterOrDigit(c) && !justSaved))
-        {
-            performStateChange();
-            System.out.println("SAVED");
-            justSaved = true;
-        }
-        // Prevents from loop saving due to repetitive non digit character
-        else if (Character.isLetterOrDigit(c))
-        {
-            justSaved = false;
-        }
+//        final char c = text.charAt(0);
+        // Causes conflict when characters are not inserted at the end.
+        // The presence of the whitespace characters is necessary to avoid it.
+//        if (!Character.isWhitespace(c))
+//        {
+//            performStateChange(offset, length, text, OperationType.INSERT);
+//            System.out.println("INSERTED");
+//        }
+
+        performStateChange(offset, length, text, OperationType.INSERT);
+        System.out.println("INSERTED");
 
         super.replace(fb, offset, length, text, attrs);
     }
@@ -53,27 +52,27 @@ public class MementoDocumentFilter extends DocumentFilter
         System.out.println("REMOVE");
         System.out.println("offset: " + offset);
         System.out.println("length: " + length);
-        if (length > 1 || deletedCount > 5)
-        {
-            performStateChange();
-            System.out.println("DELETED");
-            deletedCount = 0;
-        }
-        else ++deletedCount;
+        performStateChange(offset, length, null, OperationType.DELETE);
+        System.out.println("DELETED");
         super.remove(fb, offset, length);
     }
 
-    private void performStateChange()
+    private void performStateChange(int offset, int length, String text, OperationType operationType)
     {
-        // Prevents saving the old state as a new state.
+//         Prevents saving the old state as a new state.
         if (textAreaCaretaker.getStateChange())
         {
             textAreaCaretaker.setStateChange(false);
         }
         else
         {
-            textAreaCaretaker.saveState();
+            textAreaCaretaker.saveState(offset, length, text, operationType);
         }
+    }
+
+    public TextAreaCaretaker getTextAreaCaretaker()
+    {
+        return textAreaCaretaker;
     }
 
     //    @Override
@@ -83,5 +82,4 @@ public class MementoDocumentFilter extends DocumentFilter
 //        performStateChange();
 //        super.insertString(fb, offset, string, attr);
 //    }
-//
 }

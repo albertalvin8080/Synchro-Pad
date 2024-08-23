@@ -100,6 +100,7 @@ public class TextEditor extends JFrame
         });
 
         textAreaCaretaker = new TextAreaCaretaker(new TextAreaOriginator(textArea));
+        textAreaCaretaker.saveState(); // Initial state save.
 
         // Problem: the DocumentListener executes AFTER the textArea has been updated.
 //        textArea.getDocument().addDocumentListener(new MementoDocumentListener(textAreaCaretaker));
@@ -115,8 +116,6 @@ public class TextEditor extends JFrame
                 this.setTitle(this.getTitle().substring(1));
             }
             titleState = TitleStates.NOT_MODIFIED;
-            // Prevents errors due to undo/redo of previous versions of the document before opening a new one.
-            mementoDocumentFilter.getTextAreaCaretaker().clearAll();
         });
         exitMenuItem.addActionListener(e -> menuBarCommandInvoker.execute("exit"));
 
@@ -187,12 +186,12 @@ public class TextEditor extends JFrame
             if (start != end)
             {
                 String selectedText = textArea.getSelectedText();
-
                 String upperText = selectedText.toUpperCase();
-                StringBuilder text = new StringBuilder(textArea.getText());
-                textArea.setText(text.toString());
-                text.replace(start, end, upperText);
-                textArea.setText(text.toString());
+                if(upperText.equals(selectedText)) return; // Already uppercase
+
+                StringBuilder content = new StringBuilder(textArea.getText());
+                content.replace(start, end, upperText);
+                textArea.setText(content.toString());
                 textArea.setSelectionStart(start);
                 textArea.setSelectionEnd(start + upperText.length());
             }
@@ -205,18 +204,17 @@ public class TextEditor extends JFrame
             int start = textArea.getSelectionStart();
             int end = textArea.getSelectionEnd();
 
-            // Ensures that there is a selection
             if (start != end)
             {
                 String selectedText = textArea.getSelectedText();
+                String lowerText = selectedText.toLowerCase();
+                if (lowerText.equals(selectedText)) return; // Already lowercase
 
-                String upperText = selectedText.toLowerCase();
-                StringBuilder text = new StringBuilder(textArea.getText());
-                textArea.setText(text.toString());
-                text.replace(start, end, upperText);
-                textArea.setText(text.toString());
+                StringBuilder content = new StringBuilder(textArea.getText());
+                content.replace(start, end, lowerText);
+                textArea.setText(content.toString());
                 textArea.setSelectionStart(start);
-                textArea.setSelectionEnd(start + upperText.length());
+                textArea.setSelectionEnd(start + lowerText.length());
             }
         });
         formatMenu.add(lowerCaseMenuItem);
