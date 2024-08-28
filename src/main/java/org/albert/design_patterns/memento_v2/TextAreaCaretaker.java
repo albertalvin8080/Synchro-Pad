@@ -31,38 +31,36 @@ public class TextAreaCaretaker
 
     public void undo()
     {
-        if (!undoDeque.isEmpty())
-        {
-            stateChange = true;
-            TextAreaMemento memento = undoDeque.pop();
-            redoDeque.push(originator.createMemento(
-                    memento.offset,
-                    memento.length,
-                    memento.text,
-                    memento.operationType == OperationType.INSERT ?
-                            OperationType.DELETE : OperationType.INSERT
-            ));
-            originator.restoreMemento(memento);
-            checkSize();
-        }
+        if (undoDeque.isEmpty()) return;
+
+        stateChange = true;
+        TextAreaMemento memento = undoDeque.pop();
+
+        redoDeque.push(originator.createMemento(
+                memento.offset,
+                memento.length,
+                memento.text,
+                memento.operationType
+        ));
+
+        originator.restoreMemento(memento);
+        checkSize();
     }
 
     public void redo()
     {
-        if (!redoDeque.isEmpty())
-        {
-            stateChange = true;
-            TextAreaMemento memento = redoDeque.pop();
-            undoDeque.push(originator.createMemento(
-                    memento.offset,
-                    memento.length,
-                    memento.text,
-                    memento.operationType == OperationType.INSERT ?
-                            OperationType.DELETE : OperationType.INSERT
-            ));
-            originator.restoreMemento(memento);
-            checkSize();
-        }
+        if (undoDeque.isEmpty()) return;
+
+        stateChange = true;
+        TextAreaMemento memento = redoDeque.pop();
+        undoDeque.push(originator.createMemento(
+                memento.offset,
+                memento.length,
+                memento.text,
+                memento.operationType
+        ));
+        originator.restoreMemento(memento);
+        checkSize();
     }
 
     private void checkSize()

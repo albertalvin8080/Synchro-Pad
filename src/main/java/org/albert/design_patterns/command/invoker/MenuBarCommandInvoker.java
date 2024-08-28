@@ -8,6 +8,8 @@ import org.albert.design_patterns.command.instances.edit.PasteCommand;
 import org.albert.design_patterns.command.instances.file.ExitFileCommand;
 import org.albert.design_patterns.command.instances.file.OpenFileCommand;
 import org.albert.design_patterns.command.instances.file.SaveFileCommand;
+import org.albert.design_patterns.command.instances.format.LowerCaseCommand;
+import org.albert.design_patterns.command.instances.format.UpperCaseCommand;
 
 import javax.swing.*;
 import java.util.HashMap;
@@ -27,6 +29,8 @@ public class MenuBarCommandInvoker
         commandMap.put("save", new SaveFileCommand(frame, textArea, filePathHolder));
         commandMap.put("open", new OpenFileCommand(frame, textArea, filePathHolder));
         commandMap.put("exit", new ExitFileCommand(frame));
+        commandMap.put("lowercase", new LowerCaseCommand(textArea));
+        commandMap.put("uppercase", new UpperCaseCommand(textArea));
     }
 
     public void execute(String key)

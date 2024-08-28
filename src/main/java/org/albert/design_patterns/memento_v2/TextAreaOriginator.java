@@ -3,6 +3,7 @@ package org.albert.design_patterns.memento_v2;
 import org.albert.util.OperationType;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
 
 public class TextAreaOriginator
 {
@@ -15,19 +16,32 @@ public class TextAreaOriginator
 
     public TextAreaMemento createMemento(int offset, int length, String text, OperationType operationType)
     {
-        if(operationType == OperationType.INSERT)
+        TextAreaMemento replacement = null;
+
+        if (operationType == OperationType.INSERT)
         {
             length = text.length();
+            final String wholeText = textArea.getText();
+            if (offset + length <= wholeText.length())
+            {
+                final String previousInPlace = wholeText.substring(offset, length);
+                System.out.println(previousInPlace);
+                if (!previousInPlace.isBlank())
+                {
+                    replacement = new TextAreaMemento(offset, length, previousInPlace, null, 0, null);
+                    operationType = OperationType.REPLACE;
+                }
+            }
         }
         // `&& text == null` check is in case the memento being saved is a previous redo/undo one.
-        else if(operationType == OperationType.DELETE && text == null)
+        else if (operationType == OperationType.DELETE && text == null)
         {
             // Necessary because remove() from the filter doesn't return the string being removed.
             text = textArea.getText().substring(offset, offset + length);
         }
 
         return new TextAreaMemento(
-                offset, length, text, operationType, textArea.getCaretPosition()
+                offset, length, text, operationType, textArea.getCaretPosition(), replacement
         );
     }
 
@@ -43,7 +57,7 @@ public class TextAreaOriginator
             sb.delete(offset, offset + length);
             textArea.setText(sb.toString());
         }
-        else if(memento.operationType == OperationType.DELETE)
+        else if (memento.operationType == OperationType.DELETE)
         {
             final StringBuilder sb = new StringBuilder(textArea.getText());
             final int offset = memento.offset;
@@ -51,6 +65,13 @@ public class TextAreaOriginator
             sb.insert(offset, text);
             textArea.setText(sb.toString());
         }
+        else if (memento.operationType == OperationType.REPLACE)
+        {
+
+        }
+        System.out.println("BEFORE CARET");
         textArea.setCaretPosition(memento.caretPosition);
+        System.out.println("AFTER CARET");
     }
 }
+

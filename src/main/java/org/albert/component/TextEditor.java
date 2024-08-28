@@ -1,9 +1,11 @@
 package org.albert.component;
 
+import org.albert.component.FindMenuItemDialog;
+import org.albert.component.FontFormatDialog;
 import org.albert.design_patterns.command.invoker.MenuBarCommandInvoker;
+import org.albert.design_patterns.memento.MementoDocumentFilter;
 import org.albert.design_patterns.memento.TextAreaCaretaker;
 import org.albert.design_patterns.memento.TextAreaOriginator;
-import org.albert.design_patterns.memento.MementoDocumentFilter;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -178,45 +180,12 @@ public class TextEditor extends JFrame
 
         upperCaseMenuItem = new JMenuItem("UpperCase");
         upperCaseMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_U, KeyEvent.CTRL_DOWN_MASK));
-        upperCaseMenuItem.addActionListener(e -> {
-            int start = textArea.getSelectionStart();
-            int end = textArea.getSelectionEnd();
-
-            // Ensures that there is a selection
-            if (start != end)
-            {
-                String selectedText = textArea.getSelectedText();
-                String upperText = selectedText.toUpperCase();
-                if(upperText.equals(selectedText)) return; // Already uppercase
-
-                StringBuilder content = new StringBuilder(textArea.getText());
-                content.replace(start, end, upperText);
-                textArea.setText(content.toString());
-                textArea.setSelectionStart(start);
-                textArea.setSelectionEnd(start + upperText.length());
-            }
-        });
+        upperCaseMenuItem.addActionListener(e -> menuBarCommandInvoker.execute("uppercase"));
         formatMenu.add(upperCaseMenuItem);
 
         lowerCaseMenuItem = new JMenuItem("LowerCase");
         lowerCaseMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, KeyEvent.CTRL_DOWN_MASK));
-        lowerCaseMenuItem.addActionListener(e -> {
-            int start = textArea.getSelectionStart();
-            int end = textArea.getSelectionEnd();
-
-            if (start != end)
-            {
-                String selectedText = textArea.getSelectedText();
-                String lowerText = selectedText.toLowerCase();
-                if (lowerText.equals(selectedText)) return; // Already lowercase
-
-                StringBuilder content = new StringBuilder(textArea.getText());
-                content.replace(start, end, lowerText);
-                textArea.setText(content.toString());
-                textArea.setSelectionStart(start);
-                textArea.setSelectionEnd(start + lowerText.length());
-            }
-        });
+        lowerCaseMenuItem.addActionListener(e -> menuBarCommandInvoker.execute("lowercase"));
         formatMenu.add(lowerCaseMenuItem);
 
         menuBar.add(fileMenu);

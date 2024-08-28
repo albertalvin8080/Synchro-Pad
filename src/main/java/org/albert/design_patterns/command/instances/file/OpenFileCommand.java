@@ -7,7 +7,6 @@ import org.albert.design_patterns.command.invoker.FilePathHolder;
 
 import javax.swing.*;
 import java.io.*;
-import java.util.stream.Collectors;
 
 public class OpenFileCommand implements Command
 {

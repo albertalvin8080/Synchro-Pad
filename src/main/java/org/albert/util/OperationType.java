@@ -2,5 +2,5 @@ package org.albert.util;
 
 public enum OperationType
 {
-    DELETE, INSERT
+    DELETE, INSERT, REPLACE
 }
