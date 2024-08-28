@@ -9,6 +9,7 @@ public class App
     public static void main( String[] args )
     {
         SwingUtilities.invokeLater(TextEditor::new);
+//        new TextEditor();
     }
 }
 
