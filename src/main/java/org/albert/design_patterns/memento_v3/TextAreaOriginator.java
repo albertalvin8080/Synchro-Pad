@@ -16,26 +16,26 @@ public class TextAreaOriginator
 
     public TextAreaMemento createMemento(int offset, int length, String text, OperationType operationType)
     {
-        boolean isReplacement = false;
-        String replacementText = null;
+        String replacementText = "";
 
         if (operationType == OperationType.INSERT)
         {
-            length = text.length();
-            try
-            {
-                final String replaced = textArea.getText(offset, length);
-                System.out.println("REPLACED: " + replaced);
+            final String wholeText = textArea.getText();
+            final int wholeTextLength = wholeText.length();
 
-                if(!replaced.equals("\n"))
-                {
-                    System.out.println("N Éeeeeeeeeee");
-                }
-            }
-            catch (BadLocationException e)
-            {
-                throw new RuntimeException(e);
-            }
+            System.out.println(offset);
+            System.out.println(wholeTextLength);
+
+            if (offset + length > wholeTextLength)
+                replacementText = wholeText.substring(offset, wholeTextLength);
+            else
+                replacementText = wholeText.substring(offset, offset + length);
+
+            System.out.println("REPLACED: " + replacementText);
+
+            // The length prior to this point was the length of the characters being replaced.
+            // From here, it's the length of the replacing characters.
+            length = text.length();
         }
         // `&& text == null` check is in case the memento being saved is a previous redo/undo one.
         else if (operationType == OperationType.DELETE && text == null)
@@ -45,19 +45,21 @@ public class TextAreaOriginator
         }
 
         return new TextAreaMemento(
-                offset, length, text, operationType, textArea.getCaretPosition(), isReplacement, replacementText);
+                offset, length, text, operationType, textArea.getCaretPosition(), replacementText
+        );
     }
 
     public void restoreMemento(TextAreaMemento memento)
     {
-        // WARNING: if the operation was INSERT, then you need to remove from the textArea.
-        // WARNING: if the operation was DELETE, then you need to insert into the textArea.
+        // WARNING: if the operation was INSERT, then you need to replace the new text with the old one in the textArea (even if it was an empty string).
+        // WARNING: if the operation was DELETE, then you need to re-insert the text into the textArea.
         if (memento.operationType == OperationType.INSERT)
         {
             final StringBuilder sb = new StringBuilder(textArea.getText());
+            final String replacementText = memento.replacementText;
             final int offset = memento.offset;
             final int length = memento.length;
-            sb.delete(offset, offset + length);
+            sb.replace(offset, offset + length, replacementText);
             textArea.setText(sb.toString());
         }
         else if (memento.operationType == OperationType.DELETE)
@@ -69,9 +71,9 @@ public class TextAreaOriginator
             textArea.setText(sb.toString());
         }
 
-        System.out.println("BEFORE CARET");
+//        System.out.println("BEFORE CARET");
         textArea.setCaretPosition(memento.caretPosition);
-        System.out.println("AFTER CARET");
+//        System.out.println("AFTER CARET");
     }
 }
 

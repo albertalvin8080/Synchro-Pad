@@ -30,15 +30,6 @@ public class MementoDocumentFilter extends DocumentFilter
             return;
         }
 
-//        final char c = text.charAt(0);
-        // Causes conflict when characters are not inserted at the end.
-        // The presence of the whitespace characters is necessary to avoid it.
-//        if (!Character.isWhitespace(c))
-//        {
-//            performStateChange(offset, length, text, OperationType.INSERT);
-//            System.out.println("INSERTED");
-//        }
-
         performStateChange(offset, length, text, OperationType.INSERT);
         System.out.println("INSERTED");
 

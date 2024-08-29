@@ -49,7 +49,7 @@ public class TextAreaCaretaker
 
     public void redo()
     {
-        if (undoDeque.isEmpty()) return;
+        if (redoDeque.isEmpty()) return;
 
         stateChange = true;
         TextAreaMemento memento = redoDeque.pop();
