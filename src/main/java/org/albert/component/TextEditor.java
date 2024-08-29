@@ -1,11 +1,9 @@
 package org.albert.component;
 
-import org.albert.component.FindMenuItemDialog;
-import org.albert.component.FontFormatDialog;
 import org.albert.design_patterns.command.invoker.MenuBarCommandInvoker;
-import org.albert.design_patterns.memento.MementoDocumentFilter;
-import org.albert.design_patterns.memento.TextAreaCaretaker;
-import org.albert.design_patterns.memento.TextAreaOriginator;
+import org.albert.design_patterns.memento_v3.MementoDocumentFilter;
+import org.albert.design_patterns.memento_v3.TextAreaCaretaker;
+import org.albert.design_patterns.memento_v3.TextAreaOriginator;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -102,7 +100,6 @@ public class TextEditor extends JFrame
         });
 
         textAreaCaretaker = new TextAreaCaretaker(new TextAreaOriginator(textArea));
-        textAreaCaretaker.saveState(); // Initial state save.
 
         // Problem: the DocumentListener executes AFTER the textArea has been updated.
 //        textArea.getDocument().addDocumentListener(new MementoDocumentListener(textAreaCaretaker));
@@ -118,6 +115,8 @@ public class TextEditor extends JFrame
                 this.setTitle(this.getTitle().substring(1));
             }
             titleState = TitleStates.NOT_MODIFIED;
+            // Prevents errors due to undo/redo of previous versions of the document before opening a new one.
+            mementoDocumentFilter.getTextAreaCaretaker().clearAll();
         });
         exitMenuItem.addActionListener(e -> menuBarCommandInvoker.execute("exit"));
 

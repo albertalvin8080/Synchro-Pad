@@ -1,8 +1,9 @@
-package org.albert.design_patterns.memento_v2;
+package org.albert.design_patterns.memento_v3;
 
 import org.albert.util.OperationType;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
 
 public class TextAreaOriginator
 {
@@ -15,11 +16,26 @@ public class TextAreaOriginator
 
     public TextAreaMemento createMemento(int offset, int length, String text, OperationType operationType)
     {
-        TextAreaMemento replacement = null;
+        boolean isReplacement = false;
+        String replacementText = null;
 
         if (operationType == OperationType.INSERT)
         {
             length = text.length();
+            try
+            {
+                final String replaced = textArea.getText(offset, length);
+                System.out.println("REPLACED: " + replaced);
+
+                if(!replaced.equals("\n"))
+                {
+                    System.out.println("N Éeeeeeeeeee");
+                }
+            }
+            catch (BadLocationException e)
+            {
+                throw new RuntimeException(e);
+            }
         }
         // `&& text == null` check is in case the memento being saved is a previous redo/undo one.
         else if (operationType == OperationType.DELETE && text == null)
@@ -29,8 +45,7 @@ public class TextAreaOriginator
         }
 
         return new TextAreaMemento(
-                offset, length, text, operationType, textArea.getCaretPosition(), replacement
-        );
+                offset, length, text, operationType, textArea.getCaretPosition(), isReplacement, replacementText);
     }
 
     public void restoreMemento(TextAreaMemento memento)
@@ -53,10 +68,7 @@ public class TextAreaOriginator
             sb.insert(offset, text);
             textArea.setText(sb.toString());
         }
-        else if (memento.operationType == OperationType.REPLACE)
-        {
 
-        }
         System.out.println("BEFORE CARET");
         textArea.setCaretPosition(memento.caretPosition);
         System.out.println("AFTER CARET");
