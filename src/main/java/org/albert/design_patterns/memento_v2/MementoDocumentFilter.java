@@ -1,14 +1,17 @@
 package org.albert.design_patterns.memento_v2;
 
+import org.albert.util.DataSharer;
 import org.albert.util.OperationType;
 
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
+import javax.xml.crypto.Data;
 
 public class MementoDocumentFilter extends DocumentFilter
 {
     private final TextAreaCaretaker textAreaCaretaker;
+    private DataSharer dataSharer;
 
     public MementoDocumentFilter(TextAreaCaretaker textAreaCaretaker)
     {
@@ -43,6 +46,7 @@ public class MementoDocumentFilter extends DocumentFilter
 //        System.out.println("REMOVE");
 //        System.out.println("offset: " + offset);
 //        System.out.println("length: " + length);
+
         performStateChange(offset, length, null, OperationType.DELETE);
 //        System.out.println("DELETED");
 
@@ -60,6 +64,20 @@ public class MementoDocumentFilter extends DocumentFilter
         {
             textAreaCaretaker.saveState(offset, length, text, operationType);
         }
+
+        if (dataSharer != null)
+            shareData(offset, length, text, operationType);
+    }
+
+    private void shareData(int offset, int length, String text, OperationType operationType)
+    {
+        short op = operationType == OperationType.INSERT ?
+                DataSharer.OP_INSERT : DataSharer.OP_DELETE;
+
+        if (Thread.currentThread().getName().equals("AWT-EventQueue-0"))
+        {
+            dataSharer.share(offset, length, text, op);
+        }
     }
 
     public TextAreaCaretaker getTextAreaCaretaker()
@@ -67,11 +85,8 @@ public class MementoDocumentFilter extends DocumentFilter
         return textAreaCaretaker;
     }
 
-    //    @Override
-//    public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException
-//    {
-//        System.out.println("INSERT");
-//        performStateChange();
-//        super.insertString(fb, offset, string, attr);
-//    }
+    public void setDataSharer(DataSharer dataSharer)
+    {
+        this.dataSharer = dataSharer;
+    }
 }
