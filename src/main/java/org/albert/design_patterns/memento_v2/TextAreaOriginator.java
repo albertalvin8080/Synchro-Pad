@@ -30,11 +30,11 @@ public class TextAreaOriginator
                 else
                     replacementText = wholeText.substring(offset, offset + length);
 
-                System.out.println("REPLACED: " + replacementText);
+//                System.out.println("REPLACED: " + replacementText);
             }
-            // The length prior to this point was the length of the characters being replaced.
-            // From here, it's the length of the replacing characters.
-            length = text.length();
+//            // The length prior to this point was the length of the characters being replaced.
+//            // From here, it's the length of the replacing characters.
+//            length = text.length();
         }
         // `&& text == null` check is in case the memento being saved is a previous redo/undo one.
         else if (operationType == OperationType.DELETE && text == null)
@@ -45,29 +45,27 @@ public class TextAreaOriginator
         }
 
         return new TextAreaMemento(
-                offset, length, text, operationType, textArea.getCaretPosition(), replacementText
+                offset, text, operationType, textArea.getCaretPosition(), replacementText
         );
     }
 
     public void restoreMemento(TextAreaMemento memento)
     {
+        final StringBuilder sb = new StringBuilder(textArea.getText());
+        final int offset = memento.offset;
+        final String text = memento.text;
+        final String replacementText = memento.replacementText;
+
         // WARNING: if the operation was INSERT, then you need to replace the new text with the old one in the textArea (even if it was an empty string).
         // WARNING: if the operation was DELETE, then you need to re-insert the text into the textArea.
         if (memento.operationType == OperationType.INSERT)
         {
-            final StringBuilder sb = new StringBuilder(textArea.getText());
-            final String replacementText = memento.replacementText;
-            final int offset = memento.offset;
-            final int length = memento.length;
-            sb.replace(offset, offset + length, replacementText);
+            sb.replace(offset, offset + text.length(), replacementText);
             textArea.setText(sb.toString());
         }
         else if (memento.operationType == OperationType.DELETE)
         {
-            final StringBuilder sb = new StringBuilder(textArea.getText());
-            final int offset = memento.offset;
-            final String text = memento.text;
-            sb.replace(offset, offset + memento.replacementText.length(), text);
+            sb.replace(offset, offset + replacementText.length(), text);
             textArea.setText(sb.toString());
         }
 

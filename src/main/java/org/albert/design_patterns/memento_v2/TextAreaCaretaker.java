@@ -40,7 +40,7 @@ public class TextAreaCaretaker
 
         redoDeque.push(originator.createMemento(
                 memento.offset,
-                memento.length,
+                memento.text.length(),
                 memento.text,
                 operationType,
                 memento.replacementText,
@@ -62,7 +62,7 @@ public class TextAreaCaretaker
 
         undoDeque.push(originator.createMemento(
                 memento.offset,
-                memento.length,
+                memento.text.length(),
                 memento.text,
                 operationType,
                 memento.replacementText,
