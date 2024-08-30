@@ -24,7 +24,7 @@ public class TextAreaCaretaker
 
     public void saveState(int offset, int length, String text, OperationType operationType)
     {
-        undoDeque.push(originator.createMemento(offset, length, text, operationType));
+        undoDeque.push(originator.createMemento(offset, length, text, operationType, "", false));
         redoDeque.clear(); // Clear redo stack when new actions are performed
         checkSize();
     }
@@ -35,12 +35,16 @@ public class TextAreaCaretaker
 
         stateChange = true;
         TextAreaMemento memento = undoDeque.pop();
+        final OperationType operationType = memento.operationType == OperationType.INSERT ?
+                OperationType.DELETE : OperationType.INSERT;
 
         redoDeque.push(originator.createMemento(
                 memento.offset,
                 memento.length,
                 memento.text,
-                memento.operationType
+                operationType,
+                memento.replacementText,
+                true
         ));
 
         originator.restoreMemento(memento);
@@ -49,15 +53,20 @@ public class TextAreaCaretaker
 
     public void redo()
     {
-        if (undoDeque.isEmpty()) return;
+        if (redoDeque.isEmpty()) return;
 
         stateChange = true;
         TextAreaMemento memento = redoDeque.pop();
+        final OperationType operationType = memento.operationType == OperationType.INSERT ?
+                OperationType.DELETE : OperationType.INSERT;
+
         undoDeque.push(originator.createMemento(
                 memento.offset,
                 memento.length,
                 memento.text,
-                memento.operationType
+                operationType,
+                memento.replacementText,
+                true
         ));
         originator.restoreMemento(memento);
         checkSize();

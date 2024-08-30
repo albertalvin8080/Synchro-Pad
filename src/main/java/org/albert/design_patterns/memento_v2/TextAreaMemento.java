@@ -9,15 +9,15 @@ public class TextAreaMemento
     final String text;
     final OperationType operationType;
     final int caretPosition;
-    final TextAreaMemento replacement;
+    final String replacementText;
 
-    public TextAreaMemento(int offset, int length, String text, OperationType operationType, int caretPosition, TextAreaMemento replacement)
+    public TextAreaMemento(int offset, int length, String text, OperationType operationType, int caretPosition, String replacementText)
     {
         this.offset = offset;
         this.length = length;
         this.text = text;
         this.operationType = operationType;
         this.caretPosition = caretPosition;
-        this.replacement = replacement;
+        this.replacementText = replacementText;
     }
 }

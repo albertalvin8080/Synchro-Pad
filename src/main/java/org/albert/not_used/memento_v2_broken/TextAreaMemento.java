@@ -1,4 +1,4 @@
-package org.albert.design_patterns.memento_v3;
+package org.albert.not_used.memento_v2_broken;
 
 import org.albert.util.OperationType;
 
@@ -9,15 +9,15 @@ public class TextAreaMemento
     final String text;
     final OperationType operationType;
     final int caretPosition;
-    final String replacementText;
+    final TextAreaMemento replacement;
 
-    public TextAreaMemento(int offset, int length, String text, OperationType operationType, int caretPosition, String replacementText)
+    public TextAreaMemento(int offset, int length, String text, OperationType operationType, int caretPosition, TextAreaMemento replacement)
     {
         this.offset = offset;
         this.length = length;
         this.text = text;
         this.operationType = operationType;
         this.caretPosition = caretPosition;
-        this.replacementText = replacementText;
+        this.replacement = replacement;
     }
 }

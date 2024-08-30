@@ -1,4 +1,4 @@
-package org.albert.design_patterns.memento_v2;//package org.albert.component;
+//package org.albert.component;
 //
 //import org.albert.design_patterns.command.invoker.MenuBarCommandInvoker;
 //import org.albert.design_patterns.memento_v2.MementoDocumentFilter;

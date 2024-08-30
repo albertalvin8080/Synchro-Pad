@@ -1,9 +1,8 @@
-package org.albert.design_patterns.memento_v3;
+package org.albert.not_used.memento_v2_broken;
 
 import org.albert.util.OperationType;
 
 import javax.swing.*;
-import javax.swing.text.BadLocationException;
 
 public class TextAreaOriginator
 {
@@ -16,25 +15,10 @@ public class TextAreaOriginator
 
     public TextAreaMemento createMemento(int offset, int length, String text, OperationType operationType)
     {
-        String replacementText = "";
+        TextAreaMemento replacement = null;
 
         if (operationType == OperationType.INSERT)
         {
-            final String wholeText = textArea.getText();
-            final int wholeTextLength = wholeText.length();
-
-            System.out.println(offset);
-            System.out.println(wholeTextLength);
-
-            if (offset + length > wholeTextLength)
-                replacementText = wholeText.substring(offset, wholeTextLength);
-            else
-                replacementText = wholeText.substring(offset, offset + length);
-
-            System.out.println("REPLACED: " + replacementText);
-
-            // The length prior to this point was the length of the characters being replaced.
-            // From here, it's the length of the replacing characters.
             length = text.length();
         }
         // `&& text == null` check is in case the memento being saved is a previous redo/undo one.
@@ -45,21 +29,20 @@ public class TextAreaOriginator
         }
 
         return new TextAreaMemento(
-                offset, length, text, operationType, textArea.getCaretPosition(), replacementText
+                offset, length, text, operationType, textArea.getCaretPosition(), replacement
         );
     }
 
     public void restoreMemento(TextAreaMemento memento)
     {
-        // WARNING: if the operation was INSERT, then you need to replace the new text with the old one in the textArea (even if it was an empty string).
-        // WARNING: if the operation was DELETE, then you need to re-insert the text into the textArea.
+        // WARNING: if the operation was INSERT, then you need to remove from the textArea.
+        // WARNING: if the operation was DELETE, then you need to insert into the textArea.
         if (memento.operationType == OperationType.INSERT)
         {
             final StringBuilder sb = new StringBuilder(textArea.getText());
-            final String replacementText = memento.replacementText;
             final int offset = memento.offset;
             final int length = memento.length;
-            sb.replace(offset, offset + length, replacementText);
+            sb.delete(offset, offset + length);
             textArea.setText(sb.toString());
         }
         else if (memento.operationType == OperationType.DELETE)
@@ -70,10 +53,9 @@ public class TextAreaOriginator
             sb.insert(offset, text);
             textArea.setText(sb.toString());
         }
-
-//        System.out.println("BEFORE CARET");
+        System.out.println("BEFORE CARET");
         textArea.setCaretPosition(memento.caretPosition);
-//        System.out.println("AFTER CARET");
+        System.out.println("AFTER CARET");
     }
 }
 

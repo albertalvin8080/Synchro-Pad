@@ -1,4 +1,4 @@
-package org.albert.design_patterns.memento_v3;
+package org.albert.not_used.memento_v2_broken;
 
 import org.albert.util.OperationType;
 
@@ -29,6 +29,15 @@ public class MementoDocumentFilter extends DocumentFilter
             super.replace(fb, offset, length, text, attrs);
             return;
         }
+
+//        final char c = text.charAt(0);
+        // Causes conflict when characters are not inserted at the end.
+        // The presence of the whitespace characters is necessary to avoid it.
+//        if (!Character.isWhitespace(c))
+//        {
+//            performStateChange(offset, length, text, OperationType.INSERT);
+//            System.out.println("INSERTED");
+//        }
 
         performStateChange(offset, length, text, OperationType.INSERT);
         System.out.println("INSERTED");

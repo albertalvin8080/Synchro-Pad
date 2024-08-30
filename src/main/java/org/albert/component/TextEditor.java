@@ -1,9 +1,9 @@
 package org.albert.component;
 
 import org.albert.design_patterns.command.invoker.MenuBarCommandInvoker;
-import org.albert.design_patterns.memento_v3.MementoDocumentFilter;
-import org.albert.design_patterns.memento_v3.TextAreaCaretaker;
-import org.albert.design_patterns.memento_v3.TextAreaOriginator;
+import org.albert.design_patterns.memento_v2.MementoDocumentFilter;
+import org.albert.design_patterns.memento_v2.TextAreaCaretaker;
+import org.albert.design_patterns.memento_v2.TextAreaOriginator;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;

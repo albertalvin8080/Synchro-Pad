@@ -1,4 +1,4 @@
-package org.albert.design_patterns.memento_v3;
+package org.albert.not_used.memento_v2_broken;
 
 import org.albert.util.OperationType;
 
@@ -49,7 +49,7 @@ public class TextAreaCaretaker
 
     public void redo()
     {
-        if (redoDeque.isEmpty()) return;
+        if (undoDeque.isEmpty()) return;
 
         stateChange = true;
         TextAreaMemento memento = redoDeque.pop();
