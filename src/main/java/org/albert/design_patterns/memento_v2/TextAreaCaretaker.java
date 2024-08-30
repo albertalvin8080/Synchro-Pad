@@ -1,5 +1,6 @@
 package org.albert.design_patterns.memento_v2;
 
+import org.albert.util.DataSharer;
 import org.albert.util.OperationType;
 
 import java.util.ArrayDeque;
@@ -9,7 +10,7 @@ public class TextAreaCaretaker
 {
     private static final int MAX_SIZE = 50;
 
-    private boolean stateChange;
+    private volatile boolean stateChange;
 
     private final TextAreaOriginator originator;
     private final Deque<TextAreaMemento> undoDeque;
@@ -94,5 +95,10 @@ public class TextAreaCaretaker
     {
         undoDeque.clear();
         redoDeque.clear();
+    }
+
+    public void setDataSharer(DataSharer dataSharer)
+    {
+        this.originator.setDataSharer(dataSharer);
     }
 }

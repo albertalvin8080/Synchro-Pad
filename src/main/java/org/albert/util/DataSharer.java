@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.io.IOException;
 import java.lang.ref.Cleaner;
 import java.net.*;
+import java.util.Arrays;
 import java.util.UUID;
 
 public class DataSharer
@@ -150,19 +151,26 @@ public class DataSharer
     private String[] extractMessage(DatagramPacket packet)
     {
         String str = new String(packet.getData(), 0, packet.getLength());
-        return str.split(":", 5);
+        final String[] split = str.split(":", 5);
+        // Text == null scenario
+//        System.out.println(split[4]);
+        return split;
     }
 
     private void processMessage(short operationType, int offset, int length, String text)
     {
+        System.out.println("DATA SHARER");
+        System.out.println(Arrays.toString(
+                new Object[]{offset, length, text, operationType}
+        ));
         final StringBuilder sb = new StringBuilder(textArea.getText());
         if (operationType == DataSharer.OP_INSERT)
         {
-            sb.insert(offset, text);
+            sb.replace(offset, offset + length, text.equals("null") ? "" : text);
         }
         else if (operationType == DataSharer.OP_DELETE)
         {
-            sb.delete(offset, offset + length);
+            sb.replace(offset, offset + length, text.equals("null") ? "" : text);
         }
         textArea.setText(sb.toString());
     }

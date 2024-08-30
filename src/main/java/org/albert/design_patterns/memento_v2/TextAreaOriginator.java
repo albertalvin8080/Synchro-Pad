@@ -1,12 +1,15 @@
 package org.albert.design_patterns.memento_v2;
 
+import org.albert.util.DataSharer;
 import org.albert.util.OperationType;
 
 import javax.swing.*;
+import java.util.Arrays;
 
 public class TextAreaOriginator
 {
     private final JTextArea textArea;
+    private DataSharer dataSharer;
 
     public TextAreaOriginator(JTextArea textArea)
     {
@@ -60,18 +63,34 @@ public class TextAreaOriginator
         // WARNING: if the operation was DELETE, then you need to re-insert the text into the textArea.
         if (memento.operationType == OperationType.INSERT)
         {
-            sb.replace(offset, offset + text.length(), replacementText);
+            final int length = offset + text.length();
+            sb.replace(offset, length, replacementText);
             textArea.setText(sb.toString());
+            dataSharer.share(offset, length, replacementText, DataSharer.OP_DELETE);
+            System.out.println("ORIGINATOR");
+            System.out.println(Arrays.toString(
+                    new Object[]{offset, length, replacementText, DataSharer.OP_DELETE}
+            ));
         }
         else if (memento.operationType == OperationType.DELETE)
         {
-            sb.replace(offset, offset + replacementText.length(), text);
+            final int length = offset + replacementText.length();
+            sb.replace(offset, length, text);
             textArea.setText(sb.toString());
+            dataSharer.share(offset, length, text, DataSharer.OP_INSERT);
+            System.out.println(Arrays.toString(
+                    new Object[]{offset, length, text, DataSharer.OP_INSERT}
+            ));
         }
 
 //        System.out.println("BEFORE CARET");
         textArea.setCaretPosition(memento.caretPosition);
 //        System.out.println("AFTER CARET");
+    }
+
+    public void setDataSharer(DataSharer dataSharer)
+    {
+        this.dataSharer = dataSharer;
     }
 }
 

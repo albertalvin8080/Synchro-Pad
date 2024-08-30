@@ -6,7 +6,6 @@ import org.albert.util.OperationType;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
-import javax.xml.crypto.Data;
 
 public class MementoDocumentFilter extends DocumentFilter
 {
@@ -65,8 +64,11 @@ public class MementoDocumentFilter extends DocumentFilter
             textAreaCaretaker.saveState(offset, length, text, operationType);
         }
 
-        if (dataSharer != null)
+        if (dataSharer != null && !textAreaCaretaker.getStateChange())
+        {
+            System.out.println(textAreaCaretaker.getStateChange());
             shareData(offset, length, text, operationType);
+        }
     }
 
     private void shareData(int offset, int length, String text, OperationType operationType)
@@ -88,5 +90,6 @@ public class MementoDocumentFilter extends DocumentFilter
     public void setDataSharer(DataSharer dataSharer)
     {
         this.dataSharer = dataSharer;
+        textAreaCaretaker.setDataSharer(dataSharer);
     }
 }
