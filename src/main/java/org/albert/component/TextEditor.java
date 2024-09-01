@@ -4,7 +4,8 @@ import org.albert.design_patterns.command.invoker.MenuBarCommandInvoker;
 import org.albert.design_patterns.memento_v2.MementoDocumentFilter;
 import org.albert.design_patterns.memento_v2.TextAreaCaretaker;
 import org.albert.design_patterns.memento_v2.TextAreaOriginator;
-import org.albert.util.DataSharer;
+import org.albert.design_patterns.observer.DataSharerFacade;
+import org.albert.design_patterns.observer.DataSharerStateChangeObserver;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -41,8 +42,10 @@ public class TextEditor extends JFrame
     private final JMenuItem lowerCaseMenuItem;
     private final JMenu multicastMenu;
     private final JMenuItem connectMenuItem;
+    private final JMenuItem disconnectMenuItem;
 
     private final MementoDocumentFilter mementoDocumentFilter;
+    private final DataSharerFacade dataSharerFacade;
 
     private final TextAreaCaretaker textAreaCaretaker;
     private final String baseTitle = "Swing Editor";
@@ -105,12 +108,13 @@ public class TextEditor extends JFrame
             titleState = TitleStates.NOT_MODIFIED;
         });
 
-        textAreaCaretaker = new TextAreaCaretaker(new TextAreaOriginator(textArea));
+        dataSharerFacade = DataSharerFacade.getInstance(textArea);
+        textAreaCaretaker = new TextAreaCaretaker(new TextAreaOriginator(textArea, dataSharerFacade));
 
         // Problem: the DocumentListener executes AFTER the textArea has been updated.
 //        textArea.getDocument().addDocumentListener(new MementoDocumentListener(textAreaCaretaker));
         AbstractDocument doc = (AbstractDocument) textArea.getDocument();
-        mementoDocumentFilter = new MementoDocumentFilter(textAreaCaretaker);
+        mementoDocumentFilter = new MementoDocumentFilter(textAreaCaretaker, dataSharerFacade);
         doc.setDocumentFilter(mementoDocumentFilter);
         textArea.getDocument().addDocumentListener(new TitleChangeDocumentListener());
 
@@ -196,17 +200,12 @@ public class TextEditor extends JFrame
         // Multicast Menu
         multicastMenu = new JMenu("Multicast");
         connectMenuItem = new JMenuItem("Connect");
-        connectMenuItem.addActionListener(e -> {
-            try
-            {
-                mementoDocumentFilter.setDataSharer(new DataSharer(textArea));
-            }
-            catch (IOException | InterruptedException ex)
-            {
-                throw new RuntimeException(ex);
-            }
-        });
+        connectMenuItem.addActionListener(e -> dataSharerFacade.openConnection());
         multicastMenu.add(connectMenuItem);
+
+        disconnectMenuItem = new JMenuItem("Disconnect");
+        disconnectMenuItem.addActionListener(e -> dataSharerFacade.closeConnection());
+        multicastMenu.add(disconnectMenuItem);
 
         menuBar.add(fileMenu);
         menuBar.add(editMenu);

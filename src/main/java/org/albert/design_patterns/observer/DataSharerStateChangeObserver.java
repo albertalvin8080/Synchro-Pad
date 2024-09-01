@@ -1,4 +1,4 @@
-package org.albert.util;
+package org.albert.design_patterns.observer;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -7,7 +7,7 @@ import java.net.*;
 import java.util.Arrays;
 import java.util.UUID;
 
-public class DataSharer
+public class DataSharerStateChangeObserver implements StateChangeObserver
 {
     public static final short OP_BREAK = -1;
     public static final short OP_NEW_REQUEST = 10;
@@ -15,16 +15,18 @@ public class DataSharer
     public static final short OP_INSERT = 1;
     public static final short OP_DELETE = 2;
 
-    private final JTextArea textArea;
     private final UUID uuid;
     private InetAddress mcastaddr;
     private InetSocketAddress group;
     private NetworkInterface netIf;
     private MulticastSocket multicastSocket;
+
+    private final JTextArea textArea;
     private final Cleaner.Cleanable cleanable;
+    private volatile boolean running;
     private final Thread thread;
 
-    public DataSharer(JTextArea textArea) throws IOException, InterruptedException
+    public DataSharerStateChangeObserver(JTextArea textArea) throws IOException, InterruptedException
     {
         this.textArea = textArea;
         this.uuid = UUID.randomUUID();
@@ -41,6 +43,7 @@ public class DataSharer
             }
         });
 
+        running = true;
         final Thread init = init();
         init.start();
         System.out.println("Waiting for init...");
@@ -65,7 +68,7 @@ public class DataSharer
         return new Thread(() -> {
             sendMessage(OP_NEW_REQUEST, 0, 0, "");
 
-            while (true)
+            while (running)
             {
                 DatagramPacket dIn = receiveMessage();
                 String[] parts = extractMessage(dIn);
@@ -73,7 +76,7 @@ public class DataSharer
                 short operationType = Short.parseShort(parts[1]);
                 String text = parts[4];
 
-                if (senderId.equals(this.uuid.toString()) && operationType == DataSharer.OP_NEW_RESPONSE)
+                if (senderId.equals(this.uuid.toString()) && operationType == DataSharerStateChangeObserver.OP_NEW_RESPONSE)
                 {
                     textArea.setText(text);
                     break;
@@ -82,16 +85,11 @@ public class DataSharer
         });
     }
 
-    public void share(int offset, int length, String text, short operationType)
-    {
-        sendMessage(operationType, offset, length, text);
-    }
-
     private Thread createAsyncReceiveThread()
     {
         return new Thread(() -> {
             System.out.println("Thread listening...");
-            while (true)
+            while (running)
             {
                 DatagramPacket dIn = receiveMessage();
                 if (dIn != null)
@@ -141,6 +139,14 @@ public class DataSharer
             multicastSocket.receive(dIn);
             return dIn;
         }
+        catch (SocketException e)
+        {
+            if(e.getMessage().equals("Socket closed"))
+                System.out.println("Connection closed");
+            else
+                e.printStackTrace();
+            return null;
+        }
         catch (IOException e)
         {
             e.printStackTrace();
@@ -152,7 +158,7 @@ public class DataSharer
     {
         String str = new String(packet.getData(), 0, packet.getLength());
         final String[] split = str.split(":", 5);
-        // Text == null scenario
+        // Testing text == null scenario.
 //        System.out.println(split[4]);
         return split;
     }
@@ -163,16 +169,37 @@ public class DataSharer
         System.out.println(Arrays.toString(
                 new Object[]{offset, length, text, operationType}
         ));
+
         final StringBuilder sb = new StringBuilder(textArea.getText());
-        if (operationType == DataSharer.OP_INSERT)
+        if (operationType == DataSharerStateChangeObserver.OP_INSERT ||
+                operationType == DataSharerStateChangeObserver.OP_DELETE)
         {
             sb.replace(offset, offset + length, text.equals("null") ? "" : text);
+            textArea.setText(sb.toString());
         }
-        else if (operationType == DataSharer.OP_DELETE)
-        {
-            sb.replace(offset, offset + length, text.equals("null") ? "" : text);
-        }
-        textArea.setText(sb.toString());
     }
 
+    public void destroy()
+    {
+        running = false;
+        thread.interrupt();
+        cleanable.clean();
+    }
+
+    private void share(int offset, int length, String text, short operationType)
+    {
+        sendMessage(operationType, offset, length, text);
+    }
+
+    @Override
+    public void onInsert(int offset, int length, String text)
+    {
+        share(offset, length, text, OP_INSERT);
+    }
+
+    @Override
+    public void onDelete(int offset, int length, String text)
+    {
+        share(offset, length, text, OP_DELETE);
+    }
 }

@@ -56,13 +56,9 @@ public class TextEditorServer
                     DatagramPacket dOut = new DatagramPacket(msg, msg.length, mcastaddr, 1234);
                     s.send(dOut);
                 }
-                else if (operationType == OP_INSERT)
+                else if (operationType == OP_INSERT || operationType == OP_DELETE)
                 {
-                    localText.insert(offset, text);
-                }
-                else if (operationType == OP_DELETE)
-                {
-                    localText.delete(offset, offset + length);
+                    localText.replace(offset, offset + length, text.equals("null") ? "" : text);
                 }
                 else if(operationType == OP_BREAK) // Just for the compiler to shut up
                 {

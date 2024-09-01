@@ -1,6 +1,6 @@
 package org.albert.design_patterns.memento_v2;
 
-import org.albert.util.DataSharer;
+import org.albert.design_patterns.observer.DataSharerFacade;
 import org.albert.util.OperationType;
 
 import javax.swing.text.AttributeSet;
@@ -10,11 +10,12 @@ import javax.swing.text.DocumentFilter;
 public class MementoDocumentFilter extends DocumentFilter
 {
     private final TextAreaCaretaker textAreaCaretaker;
-    private DataSharer dataSharer;
+    private final DataSharerFacade dataSharerFacade;
 
-    public MementoDocumentFilter(TextAreaCaretaker textAreaCaretaker)
+    public MementoDocumentFilter(TextAreaCaretaker textAreaCaretaker, DataSharerFacade dataSharerFacade)
     {
         this.textAreaCaretaker = textAreaCaretaker;
+        this.dataSharerFacade = dataSharerFacade;
     }
 
     @Override
@@ -54,8 +55,10 @@ public class MementoDocumentFilter extends DocumentFilter
 
     private void performStateChange(int offset, int length, String text, OperationType operationType)
     {
+        final boolean stateChange = textAreaCaretaker.getStateChange();
+
 //         Prevents saving the old state as a new state.
-        if (textAreaCaretaker.getStateChange())
+        if (stateChange)
         {
             textAreaCaretaker.setStateChange(false);
         }
@@ -64,32 +67,29 @@ public class MementoDocumentFilter extends DocumentFilter
             textAreaCaretaker.saveState(offset, length, text, operationType);
         }
 
-        if (dataSharer != null && !textAreaCaretaker.getStateChange())
+//        System.out.println("State Change: " + stateChange);
+//        System.out.println(Thread.currentThread().getName());
+        if (!stateChange && Thread.currentThread().getName().equals("AWT-EventQueue-0"))
         {
-            System.out.println(textAreaCaretaker.getStateChange());
+//            System.out.println("SHARE DATA");
             shareData(offset, length, text, operationType);
         }
     }
 
     private void shareData(int offset, int length, String text, OperationType operationType)
     {
-        short op = operationType == OperationType.INSERT ?
-                DataSharer.OP_INSERT : DataSharer.OP_DELETE;
-
-        if (Thread.currentThread().getName().equals("AWT-EventQueue-0"))
+        if (operationType == OperationType.INSERT)
         {
-            dataSharer.share(offset, length, text, op);
+            dataSharerFacade.onInsert(offset, length, text);
+        }
+        else if (operationType == OperationType.DELETE)
+        {
+            dataSharerFacade.onDelete(offset, length, text);
         }
     }
 
     public TextAreaCaretaker getTextAreaCaretaker()
     {
         return textAreaCaretaker;
-    }
-
-    public void setDataSharer(DataSharer dataSharer)
-    {
-        this.dataSharer = dataSharer;
-        textAreaCaretaker.setDataSharer(dataSharer);
     }
 }
