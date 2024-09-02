@@ -32,12 +32,18 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
         this.uuid = UUID.randomUUID();
         initializeNetworking();
         cleanable = Cleaner.create().register(this, () -> {
-            try {
+            try
+            {
                 multicastSocket.leaveGroup(group, netIf);
-            } catch (IOException e) {
+            }
+            catch (IOException e)
+            {
                 e.printStackTrace();
-            } finally {
-                if (multicastSocket != null) {
+            }
+            finally
+            {
+                if (multicastSocket != null)
+                {
                     multicastSocket.close();
                 }
             }
@@ -58,28 +64,57 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
     {
         mcastaddr = InetAddress.getByName("229.1.1.1");
         netIf = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
-        group = new InetSocketAddress(mcastaddr, 1234);
-        multicastSocket = new MulticastSocket(1234);
+        final int port = 1234;
+        group = new InetSocketAddress(mcastaddr, port);
+        multicastSocket = new MulticastSocket(port);
         multicastSocket.joinGroup(group, netIf);
     }
 
     private Thread init()
     {
         return new Thread(() -> {
-            sendMessage(OP_NEW_REQUEST, 0, 0, "");
-
-            while (running)
+            try
             {
-                DatagramPacket dIn = receiveMessage();
-                String[] parts = extractMessage(dIn);
-                String senderId = parts[0];
-                short operationType = Short.parseShort(parts[1]);
-                String text = parts[4];
+                multicastSocket.setSoTimeout(5000); // Set timeout to 5 seconds
+                sendMessage(OP_NEW_REQUEST, 0, 0, "");
 
-                if (senderId.equals(this.uuid.toString()) && operationType == DataSharerStateChangeObserver.OP_NEW_RESPONSE)
+                while (running)
                 {
-                    textArea.setText(text);
-                    break;
+                    DatagramPacket dIn = receiveMessage();
+                    if (dIn == null)
+                    {
+                        sendMessage(OP_NEW_REQUEST, 0, 0, "");
+                        continue;
+                    }
+
+//                    System.out.println("BODY");
+
+                    String[] parts = extractMessage(dIn);
+                    String senderId = parts[0];
+                    short operationType = Short.parseShort(parts[1]);
+                    String text = parts[4];
+
+                    if (senderId.equals(this.uuid.toString()) && operationType == DataSharerStateChangeObserver.OP_NEW_RESPONSE)
+                    {
+                        textArea.setText(text);
+                        break;
+                    }
+                }
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+            finally
+            {
+                try
+                {
+                    multicastSocket.setSoTimeout(0);  // Set timeout back to infinite (no timeout)
+                    System.out.println("Timeout reset to infinite.");
+                }
+                catch (SocketException e)
+                {
+                    e.printStackTrace();
                 }
             }
         });
@@ -92,19 +127,18 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
             while (running)
             {
                 DatagramPacket dIn = receiveMessage();
-                if (dIn != null)
-                {
-                    String[] parts = extractMessage(dIn);
-                    String senderId = parts[0];
-                    short operationType = Short.parseShort(parts[1]);
-                    int offset = Integer.parseInt(parts[2]);
-                    int length = Integer.parseInt(parts[3]);
-                    String text = parts[4];
+                if (dIn == null) continue;
 
-                    if (!senderId.equals(uuid.toString()))
-                    {
-                        processMessage(operationType, offset, length, text);
-                    }
+                String[] parts = extractMessage(dIn);
+                String senderId = parts[0];
+                short operationType = Short.parseShort(parts[1]);
+                int offset = Integer.parseInt(parts[2]);
+                int length = Integer.parseInt(parts[3]);
+                String text = parts[4];
+
+                if (!senderId.equals(uuid.toString()))
+                {
+                    processMessage(operationType, offset, length, text);
                 }
             }
         });
@@ -141,10 +175,15 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
         }
         catch (SocketException e)
         {
-            if(e.getMessage().equals("Socket closed"))
+            if (e.getMessage().equals("Socket closed"))
                 System.out.println("Connection closed");
             else
                 e.printStackTrace();
+            return null;
+        }
+        catch (SocketTimeoutException e)
+        {
+            System.out.println("Timeout reached, trying again...");
             return null;
         }
         catch (IOException e)

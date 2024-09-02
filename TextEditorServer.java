@@ -1,6 +1,9 @@
+import java.io.*;
 import java.net.*;
-import java.util.*;
+import java.nio.file.Files;
+import java.time.Duration;
 
+// javac TextEditorServer.java && java TextEditorServer
 public class TextEditorServer
 {
     public static final short OP_BREAK = -1;
@@ -9,10 +12,33 @@ public class TextEditorServer
     public static final short OP_INSERT = 1;
     public static final short OP_DELETE = 2;
 
+    public static final String SHARED_FILE_TXT = "./shared_file.txt";
+    private static StringBuilder localText;
+    private static volatile boolean running;
+
     public static void main(String[] args)
     {
-        Scanner sc = new Scanner(System.in);
-        StringBuilder localText = new StringBuilder("");
+        localText = readFromSharedFile();
+
+        running = true;
+        final Thread thread = new Thread(() -> {
+            while (running)
+            {
+                try
+                {
+                    Thread.sleep(Duration.ofMinutes(1));
+//                    Thread.sleep(Duration.ofSeconds(3)); // Debug
+                    writeToSharedFile(localText);
+//                    System.out.println("Written"); // Debug
+                }
+                catch (InterruptedException e)
+                {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+        thread.start();
 
         try
         {
@@ -24,10 +50,11 @@ public class TextEditorServer
 
             byte[] buf = new byte[1000];
             DatagramPacket dIn = new DatagramPacket(buf, buf.length);
+            System.out.println("Server listening...");
             while (true)
             {
-                System.out.println("Server listening...");
                 s.receive(dIn);
+                System.out.println("Package received.");
                 String str = new String(buf, 0, dIn.getLength());
                 /*
                  * [0] -> UUID (string)
@@ -60,7 +87,7 @@ public class TextEditorServer
                 {
                     localText.replace(offset, offset + length, text.equals("null") ? "" : text);
                 }
-                else if(operationType == OP_BREAK) // Just for the compiler to shut up
+                else if (operationType == OP_BREAK) // Just for the compiler to shut up
                 {
                     break;
                 }
@@ -74,7 +101,67 @@ public class TextEditorServer
         }
         finally
         {
-            sc.close();
+            writeToSharedFile(localText);
+            running = false;
+        }
+
+        try
+        {
+            thread.join();
+        }
+        catch (InterruptedException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static StringBuilder readFromSharedFile()
+    {
+        File file = new File(SHARED_FILE_TXT);
+        if (!file.exists())
+        {
+            try
+            {
+                Files.createFile(file.toPath());
+            }
+            catch (IOException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+
+        try (FileReader fr = new FileReader(file);
+             BufferedReader br = new BufferedReader(fr))
+        {
+            StringBuilder content = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null)
+            {
+                content.append(line).append("\n"); // Avoiding Windows's "\r\n"
+            }
+            return content;
+        }
+        catch (IOException ex)
+        {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private synchronized static void writeToSharedFile(StringBuilder localText)
+    {
+        File file = new File(SHARED_FILE_TXT);
+
+        try (FileWriter fr = new FileWriter(file);
+             BufferedWriter bw = new BufferedWriter(fr))
+        {
+            String content = localText.toString();
+            // This converts '\n' to the platform's line separator
+            content = content.replaceAll("\n", System.lineSeparator());
+            bw.write(content);
+        }
+        catch (IOException ex)
+        {
+            throw new RuntimeException(ex);
         }
     }
 }

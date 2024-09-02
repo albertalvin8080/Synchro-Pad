@@ -5,7 +5,6 @@ import org.albert.design_patterns.memento_v2.MementoDocumentFilter;
 import org.albert.design_patterns.memento_v2.TextAreaCaretaker;
 import org.albert.design_patterns.memento_v2.TextAreaOriginator;
 import org.albert.design_patterns.observer.DataSharerFacade;
-import org.albert.design_patterns.observer.DataSharerStateChangeObserver;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -13,7 +12,6 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.AbstractDocument;
 import java.awt.*;
 import java.awt.event.KeyEvent;
-import java.io.IOException;
 
 public class TextEditor extends JFrame
 {

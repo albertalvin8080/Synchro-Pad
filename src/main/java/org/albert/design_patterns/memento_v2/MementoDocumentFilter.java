@@ -68,7 +68,7 @@ public class MementoDocumentFilter extends DocumentFilter
         }
 
 //        System.out.println("State Change: " + stateChange);
-//        System.out.println(Thread.currentThread().getName());
+//        System.out.println(Thread.currentThread().getName());3d
         if (!stateChange && Thread.currentThread().getName().equals("AWT-EventQueue-0"))
         {
 //            System.out.println("SHARE DATA");
