@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.file.Files;
 import java.time.Duration;
+import java.util.Arrays;
 
 // javac TextEditorServer.java && java TextEditorServer
 public class TextEditorServer
@@ -9,6 +10,8 @@ public class TextEditorServer
     public static final short OP_BREAK = -1;
     public static final short OP_NEW_REQUEST = 10;
     public static final short OP_NEW_RESPONSE = 11;
+    public static final short OP_NEW_RESPONSE_END = 12;
+    public static final short OP_NEW_REQUEST_INIT = 13;
     public static final short OP_INSERT = 1;
     public static final short OP_DELETE = 2;
 
@@ -48,7 +51,7 @@ public class TextEditorServer
             MulticastSocket s = new MulticastSocket(1234);
             s.joinGroup(group, netIf);
 
-            byte[] buf = new byte[1000];
+            byte[] buf = new byte[5000];
             DatagramPacket dIn = new DatagramPacket(buf, buf.length);
             System.out.println("Server listening...");
             while (true)
@@ -72,16 +75,9 @@ public class TextEditorServer
 
                 if (operationType == OP_NEW_REQUEST)
                 {
-                    byte[] msg = new StringBuilder(senderId)
-                            .append(":").append(OP_NEW_RESPONSE)
-                            .append(":").append(0)
-                            .append(":").append(0)
-                            .append(":").append(localText.toString())
-                            .toString()
-                            .getBytes();
-
-                    DatagramPacket dOut = new DatagramPacket(msg, msg.length, mcastaddr, 1234);
-                    s.send(dOut);
+                    var initPacket = constructPackage(senderId, OP_NEW_REQUEST_INIT, offset, length, "0", mcastaddr);
+                    s.send(initPacket);
+                    sendResponseInChunks(senderId, mcastaddr, s);
                 }
                 else if (operationType == OP_INSERT || operationType == OP_DELETE)
                 {
@@ -146,6 +142,49 @@ public class TextEditorServer
         {
             throw new RuntimeException(ex);
         }
+    }
+
+    private static void sendResponseInChunks(String senderId, InetAddress mcastaddr, MulticastSocket s) throws IOException
+    {
+        byte[] textBytes = localText.toString().getBytes();
+        int chunkSize = 4800;
+        int totalChunks = (int) Math.ceil((double) textBytes.length / chunkSize);
+
+        for (int i = 0; i < totalChunks; i++)
+        {
+            System.out.println(i);
+            int start = i * chunkSize;
+            int end = Math.min(start + chunkSize, textBytes.length);
+            byte[] chunk = Arrays.copyOfRange(textBytes, start, end);
+
+            // Check if this is the last chunk
+            short operationType = (i == totalChunks - 1) ? OP_NEW_RESPONSE_END : OP_NEW_RESPONSE;
+
+            // Construct and send the packet for this chunk
+            DatagramPacket dOut = constructPackage(senderId, operationType, i, totalChunks, new String(chunk), mcastaddr);
+            s.send(dOut);
+
+            try{
+                // Prevents from sending packets too early.
+                Thread.sleep(200);
+            } catch(Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static DatagramPacket constructPackage(String senderId, short operationType, int offset, int length, String text, InetAddress mcastaddr)
+    {
+        byte[] msg = new StringBuilder(senderId)
+                .append(":").append(operationType)
+                .append(":").append(offset)
+                .append(":").append(length)
+                .append(":").append(text)
+                .toString()
+                .getBytes();
+
+        return new DatagramPacket(msg, msg.length, mcastaddr, 1234);
     }
 
     private synchronized static void writeToSharedFile(StringBuilder localText)

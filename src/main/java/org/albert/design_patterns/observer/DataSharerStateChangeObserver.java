@@ -12,6 +12,8 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
     public static final short OP_BREAK = -1;
     public static final short OP_NEW_REQUEST = 10;
     public static final short OP_NEW_RESPONSE = 11;
+    public static final short OP_NEW_RESPONSE_END = 12;
+    public static final short OP_NEW_REQUEST_INIT = 13;
     public static final short OP_INSERT = 1;
     public static final short OP_DELETE = 2;
 
@@ -77,12 +79,18 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
             {
                 multicastSocket.setSoTimeout(5000); // Set timeout to 5 seconds
                 sendMessage(OP_NEW_REQUEST, 0, 0, "");
+                boolean initConfimed = false;
 
                 while (running)
                 {
                     DatagramPacket dIn = receiveMessage();
                     if (dIn == null)
                     {
+                        System.out.println(initConfimed);
+                        if (initConfimed)
+                        {
+                            continue;
+                        }
                         sendMessage(OP_NEW_REQUEST, 0, 0, "");
                         continue;
                     }
@@ -94,11 +102,19 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
                     short operationType = Short.parseShort(parts[1]);
                     String text = parts[4];
 
-                    if (senderId.equals(this.uuid.toString()) && operationType == DataSharerStateChangeObserver.OP_NEW_RESPONSE)
+                    if (!senderId.equals(this.uuid.toString())) continue;
+
+                    if (operationType == DataSharerStateChangeObserver.OP_NEW_RESPONSE)
                     {
-                        textArea.setText(text);
+                        textArea.setText(textArea.getText() + text);
+                    }
+                    else if (operationType == DataSharerStateChangeObserver.OP_NEW_RESPONSE_END)
+                    {
+                        textArea.setText(textArea.getText() + text);
                         break;
                     }
+                    else if (operationType == DataSharerStateChangeObserver.OP_NEW_REQUEST_INIT)
+                        initConfimed = true;
                 }
             }
             catch (IOException e)
@@ -167,7 +183,7 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
 
     private DatagramPacket receiveMessage()
     {
-        byte[] buf = new byte[1000];
+        byte[] buf = new byte[5000];
         DatagramPacket dIn = new DatagramPacket(buf, buf.length);
         try
         {
