@@ -1,5 +1,6 @@
 package org.albert.component;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import org.albert.design_patterns.command.invoker.MenuBarCommandInvoker;
 import org.albert.design_patterns.memento_v2.MementoDocumentFilter;
 import org.albert.design_patterns.memento_v2.TextAreaCaretaker;
@@ -42,6 +43,7 @@ public class TextEditor extends JFrame
     private final JMenuItem connectMenuItem;
     private final JMenuItem disconnectMenuItem;
 
+    private final TitleChangeDocumentListener titleChangeDocumentListener;
     private final MementoDocumentFilter mementoDocumentFilter;
     private final DataSharerFacade dataSharerFacade;
 
@@ -57,6 +59,13 @@ public class TextEditor extends JFrame
 
     public TextEditor()
     {
+        try {
+            UIManager.setLookAndFeel(new FlatLightLaf());
+            // UIManager.setLookAndFeel(new FlatDarkLaf());
+        } catch (UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
+
         // ------- TEXTAREA -------
         textArea = new JTextArea();
         textArea.setLineWrap(true);
@@ -95,7 +104,7 @@ public class TextEditor extends JFrame
         openMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
         exitMenuItem = new JMenuItem("Exit");
 
-        MenuBarCommandInvoker menuBarCommandInvoker = new MenuBarCommandInvoker(this, textArea);
+        final MenuBarCommandInvoker menuBarCommandInvoker = new MenuBarCommandInvoker(this, textArea);
         // File Menu
         saveMenuItem.addActionListener(e -> {
             menuBarCommandInvoker.execute("save");
@@ -114,7 +123,8 @@ public class TextEditor extends JFrame
         AbstractDocument doc = (AbstractDocument) textArea.getDocument();
         mementoDocumentFilter = new MementoDocumentFilter(textAreaCaretaker, dataSharerFacade);
         doc.setDocumentFilter(mementoDocumentFilter);
-        textArea.getDocument().addDocumentListener(new TitleChangeDocumentListener());
+        titleChangeDocumentListener = new TitleChangeDocumentListener();
+        textArea.getDocument().addDocumentListener(titleChangeDocumentListener);
 
         openMenuItem.addActionListener(e -> {
             menuBarCommandInvoker.execute("open");
@@ -198,11 +208,19 @@ public class TextEditor extends JFrame
         // Multicast Menu
         multicastMenu = new JMenu("Multicast");
         connectMenuItem = new JMenuItem("Connect");
-        connectMenuItem.addActionListener(e -> dataSharerFacade.openConnection());
+        connectMenuItem.addActionListener(e -> {
+            textArea.getDocument().removeDocumentListener(titleChangeDocumentListener);
+            dataSharerFacade.openConnection();
+            this.setTitle(dataSharerFacade.getUuid().toString());
+        });
         multicastMenu.add(connectMenuItem);
 
         disconnectMenuItem = new JMenuItem("Disconnect");
-        disconnectMenuItem.addActionListener(e -> dataSharerFacade.closeConnection());
+        disconnectMenuItem.addActionListener(e -> {
+            dataSharerFacade.closeConnection();
+            textArea.getDocument().addDocumentListener(titleChangeDocumentListener);
+            this.setTitle(baseTitle);
+        });
         multicastMenu.add(disconnectMenuItem);
 
         menuBar.add(fileMenu);
@@ -240,6 +258,12 @@ public class TextEditor extends JFrame
         gbc.fill = GridBagConstraints.BOTH;
         this.add(scrollPane, gbc);
         // !------- FRAME LAYOUT -------
+
+        // ------- STYLE -------
+        textArea.setBackground(new Color(245, 245, 245));  // Cor de fundo mais suave
+        textArea.setForeground(Color.DARK_GRAY);  // Cor do texto
+//        menuBar.setBackground(new Color(230, 230, 230));  // Cor do menu
+        menuBar.setForeground(Color.BLACK);
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setBackground(Color.LIGHT_GRAY);

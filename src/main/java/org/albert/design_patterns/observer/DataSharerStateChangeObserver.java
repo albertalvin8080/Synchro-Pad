@@ -136,6 +136,7 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
                 int length = Integer.parseInt(parts[3]);
                 String text = parts[4];
 
+                // Prevents intercepting its own messages.
                 if (!senderId.equals(uuid.toString()))
                 {
                     processMessage(operationType, offset, length, text);
@@ -240,5 +241,10 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
     public void onDelete(int offset, int length, String text)
     {
         share(offset, length, text, OP_DELETE);
+    }
+
+    public UUID getUuid()
+    {
+        return uuid;
     }
 }

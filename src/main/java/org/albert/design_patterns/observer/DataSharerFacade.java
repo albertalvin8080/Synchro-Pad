@@ -2,6 +2,7 @@ package org.albert.design_patterns.observer;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.util.UUID;
 
 public class DataSharerFacade implements StateChangeObserver
 {
@@ -20,6 +21,11 @@ public class DataSharerFacade implements StateChangeObserver
     private DataSharerFacade(JTextArea textArea)
     {
         this.textArea = textArea;
+    }
+
+    public UUID getUuid()
+    {
+        return this.dataSharer.getUuid();
     }
 
     public void openConnection()

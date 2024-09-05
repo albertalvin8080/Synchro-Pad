@@ -12,7 +12,7 @@ public class TextEditorServer
     public static final short OP_INSERT = 1;
     public static final short OP_DELETE = 2;
 
-    public static final String SHARED_FILE_TXT = "./shared_file.txt";
+    public static final String SHARED_FILE = "./shared_file.txt";
     private static StringBuilder localText;
     private static volatile boolean running;
 
@@ -86,6 +86,7 @@ public class TextEditorServer
                 else if (operationType == OP_INSERT || operationType == OP_DELETE)
                 {
                     localText.replace(offset, offset + length, text.equals("null") ? "" : text);
+                    System.out.println(localText.toString());
                 }
                 else if (operationType == OP_BREAK) // Just for the compiler to shut up
                 {
@@ -117,7 +118,7 @@ public class TextEditorServer
 
     private static StringBuilder readFromSharedFile()
     {
-        File file = new File(SHARED_FILE_TXT);
+        File file = new File(SHARED_FILE);
         if (!file.exists())
         {
             try
@@ -149,7 +150,7 @@ public class TextEditorServer
 
     private synchronized static void writeToSharedFile(StringBuilder localText)
     {
-        File file = new File(SHARED_FILE_TXT);
+        File file = new File(SHARED_FILE);
 
         try (FileWriter fr = new FileWriter(file);
              BufferedWriter bw = new BufferedWriter(fr))
