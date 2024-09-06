@@ -74,6 +74,7 @@ public class TextEditor extends JFrame
 
         // ------- TEXTAREA -------
         textArea = new JTextArea();
+        textArea.setTabSize(2);
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
         textArea.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 20));

@@ -31,7 +31,7 @@ public class FontFormatDialog extends JDialog
         int colorButtonWidth = 25;
         int colorButtonHeight = 25;
         colorButton.setPreferredSize(new Dimension(colorButtonWidth, colorButtonHeight));
-        final Image scaledInstance = new ImageIcon("src/main/resources/colors.png").getImage().getScaledInstance(colorButtonWidth, colorButtonHeight, Image.SCALE_SMOOTH);
+        final Image scaledInstance = new ImageIcon("colors.png").getImage().getScaledInstance(colorButtonWidth, colorButtonHeight, Image.SCALE_SMOOTH);
         colorButton.setIcon(new ImageIcon(scaledInstance));
         colorButton.addActionListener(e -> {
             newColor = JColorChooser.showDialog(this, "Choose a color", Color.BLACK);

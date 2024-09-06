@@ -64,7 +64,7 @@ public class TextEditorServer
 
                 if (operationType == OP_NEW_REQUEST)
                 {
-                    var initPacket = constructPackage(senderId, OP_NEW_REQUEST_INIT, offset, length, "0", mcastaddr);
+                    var initPacket = constructPackage(senderId, OP_NEW_REQUEST_INIT, 0, 0, "0", mcastaddr);
                     s.send(initPacket);
                     sendResponseInChunks(senderId, mcastaddr, s);
                 }

@@ -4,7 +4,6 @@ import javax.swing.*;
 import java.io.IOException;
 import java.lang.ref.Cleaner;
 import java.net.*;
-import java.util.Arrays;
 import java.util.UUID;
 
 public class DataSharerStateChangeObserver implements StateChangeObserver
@@ -28,12 +27,15 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
     private final Cleaner.Cleanable cleanable;
     private volatile boolean running;
     private final Thread thread;
+    private final MessageHandler messageHandler;
 
     public DataSharerStateChangeObserver(JTextArea textArea) throws IOException, InterruptedException
     {
         this.textArea = textArea;
         this.uuid = UUID.randomUUID();
         initializeNetworking();
+        this.messageHandler = new MessageHandler(multicastSocket, mcastaddr, uuid, textArea);
+
         cleanable = Cleaner.create().register(this, () -> {
             try
             {
@@ -76,27 +78,22 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
         try
         {
             multicastSocket.setSoTimeout(5000); // Set timeout to 5 seconds
-            sendMessage(OP_NEW_REQUEST, 0, 0, "");
+            messageHandler.sendMessage(OP_NEW_REQUEST, 0, 0, "");
             boolean initConfimed = false;
 
-            textArea.setText("");
+            StringBuilder sb = new StringBuilder("");
             while (running)
             {
-                DatagramPacket dIn = receiveMessage();
+                DatagramPacket dIn = messageHandler.receiveMessage();
                 if (dIn == null)
                 {
                     System.out.println(initConfimed);
-                    if (initConfimed)
-                    {
-                        continue;
-                    }
-                    sendMessage(OP_NEW_REQUEST, 0, 0, "");
+                    if (!initConfimed)
+                        messageHandler.sendMessage(OP_NEW_REQUEST, 0, 0, "");
                     continue;
                 }
 
-//                System.out.println("BODY");
-
-                String[] parts = extractMessage(dIn);
+                String[] parts = messageHandler.extractMessage(dIn);
                 String senderId = parts[0];
                 short operationType = Short.parseShort(parts[1]);
                 String text = parts[4];
@@ -105,18 +102,19 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
 
                 if (operationType == DataSharerStateChangeObserver.OP_NEW_RESPONSE)
                 {
-                    textArea.setText(textArea.getText() + text);
-                    var packet = constructPackage(senderId, OP_NEW_REQUEST_RECEIVED, 0, 0, "");
+                    sb.append(text);
+                    var packet = messageHandler.constructPackage(senderId, OP_NEW_REQUEST_RECEIVED, 0, 0, "");
                     multicastSocket.send(packet);
                 }
                 else if (operationType == DataSharerStateChangeObserver.OP_NEW_RESPONSE_END)
                 {
-                    textArea.setText(textArea.getText() + text);
+                    sb.append(text);
                     break;
                 }
                 else if (operationType == DataSharerStateChangeObserver.OP_NEW_REQUEST_INIT)
                     initConfimed = true;
             }
+            textArea.setText(sb.toString());
         }
         catch (IOException e)
         {
@@ -136,29 +134,16 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
         }
     }
 
-    private DatagramPacket constructPackage(String senderId, short operationType, int offset, int length, String text)
-    {
-        byte[] msg = new StringBuilder(senderId)
-                .append(":").append(operationType)
-                .append(":").append(offset)
-                .append(":").append(length)
-                .append(":").append(text)
-                .toString()
-                .getBytes();
-
-        return new DatagramPacket(msg, msg.length, mcastaddr, 1234);
-    }
-
     private Thread createAsyncReceiveThread()
     {
         return new Thread(() -> {
             System.out.println("Thread listening...");
             while (running)
             {
-                DatagramPacket dIn = receiveMessage();
+                DatagramPacket dIn = messageHandler.receiveMessage();
                 if (dIn == null) continue;
 
-                String[] parts = extractMessage(dIn);
+                String[] parts = messageHandler.extractMessage(dIn);
                 String senderId = parts[0];
                 short operationType = Short.parseShort(parts[1]);
                 int offset = Integer.parseInt(parts[2]);
@@ -168,77 +153,10 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
                 // Prevents intercepting its own messages.
                 if (!senderId.equals(uuid.toString()))
                 {
-                    processMessage(operationType, offset, length, text);
+                    messageHandler.processMessage(operationType, offset, length, text);
                 }
             }
         });
-    }
-
-    private void sendMessage(short operationType, int offset, int length, String text)
-    {
-        DatagramPacket dOut = constructPackage(uuid.toString(), operationType, offset, length, text);
-        try
-        {
-            multicastSocket.send(dOut);
-        }
-        catch (IOException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private DatagramPacket receiveMessage()
-    {
-        byte[] buf = new byte[5000];
-        DatagramPacket dIn = new DatagramPacket(buf, buf.length);
-        try
-        {
-            multicastSocket.receive(dIn);
-            return dIn;
-        }
-        catch (SocketException e)
-        {
-            if (e.getMessage().equals("Socket closed"))
-                System.out.println("Connection closed");
-            else
-                e.printStackTrace();
-            return null;
-        }
-        catch (SocketTimeoutException e)
-        {
-            System.out.println("Timeout reached, trying again...");
-            return null;
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    private String[] extractMessage(DatagramPacket packet)
-    {
-        String str = new String(packet.getData(), 0, packet.getLength());
-        final String[] split = str.split(":", 5);
-        // Testing text == null scenario.
-//        System.out.println(split[4]);
-        return split;
-    }
-
-    private void processMessage(short operationType, int offset, int length, String text)
-    {
-        System.out.println("DATA SHARER");
-        System.out.println(Arrays.toString(
-                new Object[]{offset, length, text, operationType}
-        ));
-
-        final StringBuilder sb = new StringBuilder(textArea.getText());
-        if (operationType == DataSharerStateChangeObserver.OP_INSERT ||
-                operationType == DataSharerStateChangeObserver.OP_DELETE)
-        {
-            sb.replace(offset, offset + length, text.equals("null") ? "" : text);
-            textArea.setText(sb.toString());
-        }
     }
 
     public void destroy()
@@ -250,7 +168,7 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
 
     private void share(int offset, int length, String text, short operationType)
     {
-        sendMessage(operationType, offset, length, text);
+        messageHandler.sendMessage(operationType, offset, length, text);
     }
 
     @Override
