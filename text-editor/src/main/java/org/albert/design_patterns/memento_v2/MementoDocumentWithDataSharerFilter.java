@@ -7,12 +7,12 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 
-public class MementoDocumentFilter extends DocumentFilter
+public class MementoDocumentWithDataSharerFilter extends DocumentFilter
 {
     private final TextAreaCaretaker textAreaCaretaker;
     private final DataSharerFacade dataSharerFacade;
 
-    public MementoDocumentFilter(TextAreaCaretaker textAreaCaretaker, DataSharerFacade dataSharerFacade)
+    public MementoDocumentWithDataSharerFilter(TextAreaCaretaker textAreaCaretaker, DataSharerFacade dataSharerFacade)
     {
         this.textAreaCaretaker = textAreaCaretaker;
         this.dataSharerFacade = dataSharerFacade;
@@ -55,6 +55,8 @@ public class MementoDocumentFilter extends DocumentFilter
 
     private void performStateChange(int offset, int length, String text, OperationType operationType)
     {
+        if(!Thread.currentThread().getName().equals("AWT-EventQueue-0")) return;
+
         final boolean stateChange = textAreaCaretaker.getStateChange();
 
 //         Prevents saving the old state as a new state.
@@ -69,7 +71,7 @@ public class MementoDocumentFilter extends DocumentFilter
 
 //        System.out.println("State Change: " + stateChange);
 //        System.out.println(Thread.currentThread().getName());3d
-        if (!stateChange && Thread.currentThread().getName().equals("AWT-EventQueue-0"))
+        if (!stateChange)
         {
 //            System.out.println("SHARE DATA");
             shareData(offset, length, text, operationType);

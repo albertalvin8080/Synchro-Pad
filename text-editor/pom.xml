@@ -1,26 +1,27 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.albert</groupId>
+        <artifactId>Swing-Text-Editor</artifactId>
+        <version>0.0.1</version>
+    </parent>
 
-    <groupId>org.albert</groupId>
-    <artifactId>Swing-Text-Editor</artifactId>
-    <version>0.0.1</version>
-    <packaging>pom</packaging>
+    <artifactId>text-editor</artifactId>
+    <packaging>jar</packaging>
 
-    <name>Swing-Text-Editor</name>
+    <name>text-editor</name>
     <url>http://maven.apache.org</url>
-    <modules>
-        <module>text-editor</module>
-        <module>text-editor-server</module>
-    </modules>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
     </properties>
 
     <dependencies>
-
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf</artifactId>
+            <version>2.5</version>
+        </dependency>
     </dependencies>
 </project>

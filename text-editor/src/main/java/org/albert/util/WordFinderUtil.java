@@ -124,9 +124,10 @@ public class WordFinderUtil
             }
         }
 
-        textArea.setCaretPosition(wordIndex.getStart());
-        textArea.select(wordIndex.getStart(), wordIndex.getEnd());
-        textArea.grabFocus();
+//        textArea.setCaretPosition(wordIndex.getStart());
+        textArea.setCaretPosition(wordIndex.getEnd());
+//        textArea.select(wordIndex.getStart(), wordIndex.getEnd());
+//        textArea.grabFocus();
     }
 
     public void removeHighlights()

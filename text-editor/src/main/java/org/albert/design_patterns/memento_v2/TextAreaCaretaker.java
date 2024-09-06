@@ -48,7 +48,17 @@ public class TextAreaCaretaker
                 true
         ));
 
-        originator.restoreMemento(memento);
+        try
+        {
+            originator.restoreMemento(memento);
+        }
+        catch (IllegalArgumentException | StringIndexOutOfBoundsException e)
+        {
+            System.out.println(e.getMessage());
+            redoDeque.clear();
+            undoDeque.clear();
+        }
+
         checkSize();
     }
 
@@ -69,7 +79,17 @@ public class TextAreaCaretaker
                 memento.replacementText,
                 true
         ));
-        originator.restoreMemento(memento);
+
+        try
+        {
+            originator.restoreMemento(memento);
+        }
+        catch (IllegalArgumentException | StringIndexOutOfBoundsException e)
+        {
+            System.out.println(e.getMessage());
+            redoDeque.clear();
+            undoDeque.clear();
+        }
         checkSize();
     }
 

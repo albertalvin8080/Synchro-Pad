@@ -10,12 +10,13 @@ import java.util.UUID;
 public class DataSharerStateChangeObserver implements StateChangeObserver
 {
     public static final short OP_BREAK = -1;
+    public static final short OP_INSERT = 1;
+    public static final short OP_DELETE = 2;
     public static final short OP_NEW_REQUEST = 10;
     public static final short OP_NEW_RESPONSE = 11;
     public static final short OP_NEW_RESPONSE_END = 12;
     public static final short OP_NEW_REQUEST_INIT = 13;
-    public static final short OP_INSERT = 1;
-    public static final short OP_DELETE = 2;
+    public static final short OP_NEW_REQUEST_RECEIVED = 14;
 
     private final UUID uuid;
     private InetAddress mcastaddr;
@@ -52,10 +53,8 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
         });
 
         running = true;
-        final Thread init = init();
-        init.start();
         System.out.println("Waiting for init...");
-        init.join();
+        init();
         System.out.println("Init finished.");
 
         thread = createAsyncReceiveThread();
@@ -72,68 +71,82 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
         multicastSocket.joinGroup(group, netIf);
     }
 
-    private Thread init()
+    private void init()
     {
-        return new Thread(() -> {
-            try
-            {
-                multicastSocket.setSoTimeout(5000); // Set timeout to 5 seconds
-                sendMessage(OP_NEW_REQUEST, 0, 0, "");
-                boolean initConfimed = false;
+        try
+        {
+            multicastSocket.setSoTimeout(5000); // Set timeout to 5 seconds
+            sendMessage(OP_NEW_REQUEST, 0, 0, "");
+            boolean initConfimed = false;
 
-                while (running)
+            textArea.setText("");
+            while (running)
+            {
+                DatagramPacket dIn = receiveMessage();
+                if (dIn == null)
                 {
-                    DatagramPacket dIn = receiveMessage();
-                    if (dIn == null)
+                    System.out.println(initConfimed);
+                    if (initConfimed)
                     {
-                        System.out.println(initConfimed);
-                        if (initConfimed)
-                        {
-                            continue;
-                        }
-                        sendMessage(OP_NEW_REQUEST, 0, 0, "");
                         continue;
                     }
-
-//                    System.out.println("BODY");
-
-                    String[] parts = extractMessage(dIn);
-                    String senderId = parts[0];
-                    short operationType = Short.parseShort(parts[1]);
-                    String text = parts[4];
-
-                    if (!senderId.equals(this.uuid.toString())) continue;
-
-                    if (operationType == DataSharerStateChangeObserver.OP_NEW_RESPONSE)
-                    {
-                        textArea.setText(textArea.getText() + text);
-                    }
-                    else if (operationType == DataSharerStateChangeObserver.OP_NEW_RESPONSE_END)
-                    {
-                        textArea.setText(textArea.getText() + text);
-                        break;
-                    }
-                    else if (operationType == DataSharerStateChangeObserver.OP_NEW_REQUEST_INIT)
-                        initConfimed = true;
+                    sendMessage(OP_NEW_REQUEST, 0, 0, "");
+                    continue;
                 }
+
+//                System.out.println("BODY");
+
+                String[] parts = extractMessage(dIn);
+                String senderId = parts[0];
+                short operationType = Short.parseShort(parts[1]);
+                String text = parts[4];
+
+                if (!senderId.equals(this.uuid.toString())) continue;
+
+                if (operationType == DataSharerStateChangeObserver.OP_NEW_RESPONSE)
+                {
+                    textArea.setText(textArea.getText() + text);
+                    var packet = constructPackage(senderId, OP_NEW_REQUEST_RECEIVED, 0, 0, "");
+                    multicastSocket.send(packet);
+                }
+                else if (operationType == DataSharerStateChangeObserver.OP_NEW_RESPONSE_END)
+                {
+                    textArea.setText(textArea.getText() + text);
+                    break;
+                }
+                else if (operationType == DataSharerStateChangeObserver.OP_NEW_REQUEST_INIT)
+                    initConfimed = true;
             }
-            catch (IOException e)
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                multicastSocket.setSoTimeout(0);  // Set timeout back to infinite (no timeout)
+                System.out.println("Timeout reset to infinite.");
+            }
+            catch (SocketException e)
             {
                 e.printStackTrace();
             }
-            finally
-            {
-                try
-                {
-                    multicastSocket.setSoTimeout(0);  // Set timeout back to infinite (no timeout)
-                    System.out.println("Timeout reset to infinite.");
-                }
-                catch (SocketException e)
-                {
-                    e.printStackTrace();
-                }
-            }
-        });
+        }
+    }
+
+    private DatagramPacket constructPackage(String senderId, short operationType, int offset, int length, String text)
+    {
+        byte[] msg = new StringBuilder(senderId)
+                .append(":").append(operationType)
+                .append(":").append(offset)
+                .append(":").append(length)
+                .append(":").append(text)
+                .toString()
+                .getBytes();
+
+        return new DatagramPacket(msg, msg.length, mcastaddr, 1234);
     }
 
     private Thread createAsyncReceiveThread()
@@ -163,14 +176,7 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
 
     private void sendMessage(short operationType, int offset, int length, String text)
     {
-        StringBuilder sb = new StringBuilder(uuid.toString())
-                .append(":").append(operationType)
-                .append(":").append(offset)
-                .append(":").append(length)
-                .append(":").append(text);
-
-        byte[] msg = sb.toString().getBytes();
-        DatagramPacket dOut = new DatagramPacket(msg, msg.length, mcastaddr, 1234);
+        DatagramPacket dOut = constructPackage(uuid.toString(), operationType, offset, length, text);
         try
         {
             multicastSocket.send(dOut);

@@ -5,12 +5,14 @@ import org.albert.design_patterns.command.invoker.MenuBarCommandInvoker;
 import org.albert.design_patterns.memento_v2.MementoDocumentFilter;
 import org.albert.design_patterns.memento_v2.TextAreaCaretaker;
 import org.albert.design_patterns.memento_v2.TextAreaOriginator;
+import org.albert.design_patterns.observer.DataSharerDocumentFilter;
 import org.albert.design_patterns.observer.DataSharerFacade;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.AbstractDocument;
+import javax.swing.text.Document;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 
@@ -46,6 +48,7 @@ public class TextEditor extends JFrame
     private final TitleChangeDocumentListener titleChangeDocumentListener;
     private final MementoDocumentFilter mementoDocumentFilter;
     private final DataSharerFacade dataSharerFacade;
+    private boolean connected;
 
     private final TextAreaCaretaker textAreaCaretaker;
     private final String baseTitle = "Swing Editor";
@@ -59,10 +62,13 @@ public class TextEditor extends JFrame
 
     public TextEditor()
     {
-        try {
+        try
+        {
             UIManager.setLookAndFeel(new FlatLightLaf());
             // UIManager.setLookAndFeel(new FlatDarkLaf());
-        } catch (UnsupportedLookAndFeelException e) {
+        }
+        catch (UnsupportedLookAndFeelException e)
+        {
             e.printStackTrace();
         }
 
@@ -108,6 +114,10 @@ public class TextEditor extends JFrame
         // File Menu
         saveMenuItem.addActionListener(e -> {
             menuBarCommandInvoker.execute("save");
+//            System.out.println("Connected: " + connected);
+            // Prevents changing the title if there's a multicast connection.
+            if(connected) return;
+
             if (this.getTitle().contains("*"))
             {
                 this.setTitle(this.getTitle().substring(1));
@@ -120,13 +130,21 @@ public class TextEditor extends JFrame
 
         // Problem: the DocumentListener executes AFTER the textArea has been updated.
 //        textArea.getDocument().addDocumentListener(new MementoDocumentListener(textAreaCaretaker));
-        AbstractDocument doc = (AbstractDocument) textArea.getDocument();
-        mementoDocumentFilter = new MementoDocumentFilter(textAreaCaretaker, dataSharerFacade);
-        doc.setDocumentFilter(mementoDocumentFilter);
+        final Document document = textArea.getDocument();
+        final AbstractDocument abstractDocument = (AbstractDocument) document;
+        // Now it's NOT possible to perform undo/redo while connected.
+//        mementoDocumentFilter = new MementoDocumentFilter(textAreaCaretaker, dataSharerFacade);
+        mementoDocumentFilter = new MementoDocumentFilter(textAreaCaretaker);
+        abstractDocument.setDocumentFilter(mementoDocumentFilter);
         titleChangeDocumentListener = new TitleChangeDocumentListener();
-        textArea.getDocument().addDocumentListener(titleChangeDocumentListener);
+        document.addDocumentListener(titleChangeDocumentListener);
 
         openMenuItem.addActionListener(e -> {
+            if(connected)
+            {
+                disconnect(document, abstractDocument);
+            }
+
             menuBarCommandInvoker.execute("open");
             if (this.getTitle().contains("*"))
             {
@@ -165,11 +183,17 @@ public class TextEditor extends JFrame
         editMenu.add(new JSeparator());
         undoMenuItem = new JMenuItem("Undo");
         undoMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK));
-        undoMenuItem.addActionListener(e -> textAreaCaretaker.undo());
+        undoMenuItem.addActionListener(e -> {
+            if (!connected)
+                textAreaCaretaker.undo();
+        });
 
         redoMenuItem = new JMenuItem("Redo");
         redoMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK));
-        redoMenuItem.addActionListener(e -> textAreaCaretaker.redo());
+        redoMenuItem.addActionListener(e -> {
+            if (!connected)
+                textAreaCaretaker.redo();
+        });
 
         editMenu.add(undoMenuItem);
         editMenu.add(redoMenuItem);
@@ -209,17 +233,18 @@ public class TextEditor extends JFrame
         multicastMenu = new JMenu("Multicast");
         connectMenuItem = new JMenuItem("Connect");
         connectMenuItem.addActionListener(e -> {
-            textArea.getDocument().removeDocumentListener(titleChangeDocumentListener);
+            document.removeDocumentListener(titleChangeDocumentListener);
+            abstractDocument.setDocumentFilter(new DataSharerDocumentFilter(dataSharerFacade));
+
             dataSharerFacade.openConnection();
+            connected = true;
             this.setTitle(dataSharerFacade.getUuid().toString());
         });
         multicastMenu.add(connectMenuItem);
 
         disconnectMenuItem = new JMenuItem("Disconnect");
         disconnectMenuItem.addActionListener(e -> {
-            dataSharerFacade.closeConnection();
-            textArea.getDocument().addDocumentListener(titleChangeDocumentListener);
-            this.setTitle(baseTitle);
+            disconnect(document, abstractDocument);
         });
         multicastMenu.add(disconnectMenuItem);
 
@@ -273,6 +298,17 @@ public class TextEditor extends JFrame
         this.setVisible(true);
     }
 
+    private void disconnect(Document document, AbstractDocument abstractDocument)
+    {
+        dataSharerFacade.closeConnection();
+        connected = false;
+
+        document.addDocumentListener(titleChangeDocumentListener);
+        abstractDocument.setDocumentFilter(mementoDocumentFilter);
+
+        this.setTitle(baseTitle);
+    }
+
     public void changeTitle(String fileName)
     {
         this.setTitle(fileName + " - " + baseTitle);
@@ -320,5 +356,10 @@ public class TextEditor extends JFrame
                 titleState = TitleStates.MODIFIED;
             }
         }
+    }
+
+    public boolean isConnected()
+    {
+        return connected;
     }
 }
