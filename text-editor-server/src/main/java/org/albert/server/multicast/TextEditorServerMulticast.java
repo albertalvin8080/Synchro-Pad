@@ -1,5 +1,7 @@
 package org.albert.server.multicast;
 
+import org.albert.util.SharedFileUtils;
+
 import java.io.*;
 import java.net.*;
 import java.nio.file.Files;
@@ -24,7 +26,7 @@ public class TextEditorServerMulticast
 
     public void init()
     {
-        localText = readFromSharedFile();
+        localText = SharedFileUtils.readFromSharedFile();
 
         running = true;
         final Thread thread = createWriteToSharedFileThread();
@@ -87,7 +89,7 @@ public class TextEditorServerMulticast
         }
         finally
         {
-            writeToSharedFile(localText);
+            SharedFileUtils.writeToSharedFile(localText);
             running = false;
         }
 
@@ -110,7 +112,7 @@ public class TextEditorServerMulticast
                 {
                     Thread.sleep(Duration.ofMinutes(1).toMillis());
 //                    Thread.sleep(Duration.ofSeconds(3)); // Debug
-                    writeToSharedFile(localText);
+                    SharedFileUtils.writeToSharedFile(localText);
 //                    System.out.println("Written"); // Debug
                 }
                 catch (InterruptedException e)
@@ -122,38 +124,6 @@ public class TextEditorServerMulticast
 
         thread.start();
         return thread;
-    }
-
-    private static StringBuilder readFromSharedFile()
-    {
-        File file = new File(SHARED_FILE);
-        if (!file.exists())
-        {
-            try
-            {
-                Files.createFile(file.toPath());
-            }
-            catch (IOException e)
-            {
-                throw new RuntimeException(e);
-            }
-        }
-
-        try (FileReader fr = new FileReader(file);
-             BufferedReader br = new BufferedReader(fr))
-        {
-            StringBuilder content = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null)
-            {
-                content.append(line).append("\n"); // Avoiding Windows's "\r\n"
-            }
-            return content;
-        }
-        catch (IOException ex)
-        {
-            throw new RuntimeException(ex);
-        }
     }
 
     private void sendResponseInChunks(String senderId, InetAddress mcastaddr, MulticastSocket s) throws IOException
@@ -215,23 +185,5 @@ public class TextEditorServerMulticast
                 .getBytes();
 
         return new DatagramPacket(msg, msg.length, mcastaddr, 1234);
-    }
-
-    private synchronized void writeToSharedFile(StringBuilder localText)
-    {
-        File file = new File(SHARED_FILE);
-
-        try (FileWriter fr = new FileWriter(file);
-             BufferedWriter bw = new BufferedWriter(fr))
-        {
-            String content = localText.toString();
-            // This converts '\n' to the platform's line separator
-            content = content.replaceAll("\n", System.lineSeparator());
-            bw.write(content);
-        }
-        catch (IOException ex)
-        {
-            throw new RuntimeException(ex);
-        }
     }
 }

@@ -8,7 +8,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>text-editor</artifactId>
   <name>text-editor</name>
-  <version>0.2.1</version>
+  <version>1.0.0</version>
   <url>http://maven.apache.org</url>
   <build>
     <plugins>

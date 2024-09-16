@@ -15,6 +15,8 @@ import javax.swing.text.AbstractDocument;
 import javax.swing.text.Document;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
+import java.net.ConnectException;
 
 public class TextEditor extends JFrame
 {
@@ -41,7 +43,7 @@ public class TextEditor extends JFrame
     private final JMenuItem fontFormatMenuItem;
     private final JMenuItem upperCaseMenuItem;
     private final JMenuItem lowerCaseMenuItem;
-    private final JMenu multicastMenu;
+    private final JMenu tcpMenu;
     private final JMenuItem connectMenuItem;
     private final JMenuItem disconnectMenuItem;
 
@@ -117,7 +119,7 @@ public class TextEditor extends JFrame
             menuBarCommandInvoker.execute("save");
 //            System.out.println("Connected: " + connected);
             // Prevents changing the title if there's a multicast connection.
-            if(connected) return;
+            if (connected) return;
 
             if (this.getTitle().contains("*"))
             {
@@ -126,13 +128,13 @@ public class TextEditor extends JFrame
             titleState = TitleStates.NOT_MODIFIED;
         });
 
-        dataSharerFacadeTcp = DataSharerFacadeTcp.getInstance(textArea);
+        dataSharerFacadeTcp = DataSharerFacadeTcp.getInstance(this, textArea);
         textAreaCaretaker = new TextAreaCaretaker(new TextAreaOriginator(textArea, dataSharerFacadeTcp));
 
         // Problem: the DocumentListener executes AFTER the textArea has been updated.
 //        textArea.getDocument().addDocumentListener(new MementoDocumentListener(textAreaCaretaker));
-        final Document document = textArea.getDocument();
-        final AbstractDocument abstractDocument = (AbstractDocument) document;
+        document = textArea.getDocument();
+        abstractDocument = (AbstractDocument) document;
         // Now it's NOT possible to perform undo/redo while connected.
 //        mementoDocumentFilter = new MementoDocumentFilter(textAreaCaretaker, dataSharerFacade);
         mementoDocumentFilter = new MementoDocumentFilter(textAreaCaretaker);
@@ -141,9 +143,9 @@ public class TextEditor extends JFrame
         document.addDocumentListener(titleChangeDocumentListener);
 
         openMenuItem.addActionListener(e -> {
-            if(connected)
+            if (connected)
             {
-                disconnect(document, abstractDocument);
+                disconnect();
             }
 
             menuBarCommandInvoker.execute("open");
@@ -230,29 +232,42 @@ public class TextEditor extends JFrame
         lowerCaseMenuItem.addActionListener(e -> menuBarCommandInvoker.execute("lowercase"));
         formatMenu.add(lowerCaseMenuItem);
 
-        // Multicast Menu
-        multicastMenu = new JMenu("Multicast");
+        // TCP Menu
+        tcpMenu = new JMenu("TCP");
         connectMenuItem = new JMenuItem("Connect");
         connectMenuItem.addActionListener(e -> {
             document.removeDocumentListener(titleChangeDocumentListener);
             abstractDocument.setDocumentFilter(new DataSharerDocumentFilter(dataSharerFacadeTcp));
 
-            dataSharerFacadeTcp.openConnection();
-            connected = true;
-            this.setTitle(dataSharerFacadeTcp.getUuid().toString());
+            String serverIp = JOptionPane.showInputDialog(
+                    this, "Provide the server's IP", "IP", JOptionPane.PLAIN_MESSAGE, null, null, "192.168.1.6"
+            ).toString();
+            connected = connect(serverIp);
+
+            if (connected)
+            {
+                this.setTitle(dataSharerFacadeTcp.getUuid().toString());
+            }
+            else
+            {
+                disconnect();
+                JOptionPane.showMessageDialog(
+                        this, "Connection refused.", "Error", JOptionPane.ERROR_MESSAGE
+                );
+            }
         });
-        multicastMenu.add(connectMenuItem);
+        tcpMenu.add(connectMenuItem);
 
         disconnectMenuItem = new JMenuItem("Disconnect");
         disconnectMenuItem.addActionListener(e -> {
-            disconnect(document, abstractDocument);
+            disconnect();
         });
-        multicastMenu.add(disconnectMenuItem);
+        tcpMenu.add(disconnectMenuItem);
 
         menuBar.add(fileMenu);
         menuBar.add(editMenu);
         menuBar.add(formatMenu);
-        menuBar.add(multicastMenu);
+        menuBar.add(tcpMenu);
         this.setJMenuBar(menuBar);
         // !------- MENU BAR -------
 
@@ -299,7 +314,9 @@ public class TextEditor extends JFrame
         this.setVisible(true);
     }
 
-    private void disconnect(Document document, AbstractDocument abstractDocument)
+    private Document document;
+    private AbstractDocument abstractDocument;
+    public void disconnect()
     {
         dataSharerFacadeTcp.closeConnection();
         connected = false;
@@ -362,5 +379,24 @@ public class TextEditor extends JFrame
     public boolean isConnected()
     {
         return connected;
+    }
+
+    public boolean connect(String serverIp)
+    {
+        try
+        {
+            dataSharerFacadeTcp.openConnection(serverIp);
+            return true;
+        }
+        catch (ConnectException e)
+        {
+            // Connection Refused
+            System.out.println(e);
+        }
+        catch (IOException | InterruptedException | ClassNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

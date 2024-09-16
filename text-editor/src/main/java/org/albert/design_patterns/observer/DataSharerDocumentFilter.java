@@ -6,6 +6,8 @@ import org.albert.util.OperationType;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
+import java.io.EOFException;
+import java.net.SocketException;
 
 public class DataSharerDocumentFilter extends DocumentFilter
 {
@@ -53,7 +55,7 @@ public class DataSharerDocumentFilter extends DocumentFilter
 
     private void performStateChange(int offset, int length, String text, OperationType operationType)
     {
-        if(!Thread.currentThread().getName().equals("AWT-EventQueue-0")) return;
+        if (!Thread.currentThread().getName().equals("AWT-EventQueue-0")) return;
 
         shareData(offset, length, text, operationType);
     }
@@ -61,12 +63,8 @@ public class DataSharerDocumentFilter extends DocumentFilter
     private void shareData(int offset, int length, String text, OperationType operationType)
     {
         if (operationType == OperationType.INSERT)
-        {
             dataSharerFacadeTcp.onInsert(offset, length, text);
-        }
         else if (operationType == OperationType.DELETE)
-        {
             dataSharerFacadeTcp.onDelete(offset, length, text);
-        }
     }
 }

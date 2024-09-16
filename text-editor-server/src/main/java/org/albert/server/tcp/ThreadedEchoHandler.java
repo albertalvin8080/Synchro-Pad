@@ -1,6 +1,8 @@
 package org.albert.server.tcp;
 
+import org.albert.server.DataSharer;
 import org.albert.util.MessageHolder;
+import org.albert.util.SharedFileUtils;
 
 import java.io.*;
 import java.net.Socket;
@@ -14,15 +16,15 @@ public class ThreadedEchoHandler extends Thread
     private final Socket incoming;
     private final List<ThreadedEchoHandler> threads;
     /*
-    * Fun fact: you must not create a new ObjectOutputStream nor ObjectInputStream
-    * because it corrupts the header.
-    * >>
-    * src: https://stackoverflow.com/questions/2393179/streamcorruptedexception-invalid-type-code-ac
-    * */
+     * Fun fact: you must not create a new ObjectOutputStream nor ObjectInputStream
+     * because it corrupts the header. Just use these two below.
+     * ->> src: https://stackoverflow.com/questions/2393179/streamcorruptedexception-invalid-type-code-ac
+     * */
     private final ObjectInputStream in;
     private final ObjectOutputStream out;
+    private final StringBuilder sb;
 
-    public ThreadedEchoHandler(Socket i, List<ThreadedEchoHandler> threads) throws IOException
+    public ThreadedEchoHandler(Socket i, List<ThreadedEchoHandler> threads, StringBuilder sb) throws IOException
     {
         uuid = UUID.randomUUID();
         incoming = i;
@@ -31,12 +33,13 @@ public class ThreadedEchoHandler extends Thread
         // Object streams to handle MessageHolder objects
         out = new ObjectOutputStream(incoming.getOutputStream());
         in = new ObjectInputStream(incoming.getInputStream());
+        this.sb = sb;
 
         // Sending the UUID in an initial message
-        MessageHolder initialMessage = new MessageHolder(uuid.toString(), (short) 0, 0, 0, "Connected");
+        MessageHolder initialMessage = new MessageHolder(uuid.toString(), (short) 0, 0, 0, sb.toString());
         out.writeObject(initialMessage);
         out.flush();
-        System.out.println("Sent -> " + initialMessage.getUuid());
+        System.out.println("Init -> " + initialMessage.getUuid());
     }
 
     @Override
@@ -48,6 +51,16 @@ public class ThreadedEchoHandler extends Thread
             while (!done)
             {
                 MessageHolder msgHolder = (MessageHolder) in.readObject();
+                short operationType = msgHolder.getOperationType();
+                int offset = msgHolder.getOffset();
+                int length = msgHolder.getLength();
+                String text = msgHolder.getText();
+
+                if (operationType == DataSharer.OP_INSERT ||
+                        operationType == DataSharer.OP_DELETE)
+                {
+                    sb.replace(offset, offset + length, text == null ? "" : text);
+                }
 
                 if (msgHolder == null)
                 {
@@ -57,7 +70,8 @@ public class ThreadedEchoHandler extends Thread
 
                 System.out.println("Received: " + msgHolder.getText()); // Debugging
 
-                threads.forEach(threadedEchoHandler -> {
+                for (var threadedEchoHandler : threads)
+                {
                     if (threadedEchoHandler != this)
                     {
                         try
@@ -76,43 +90,19 @@ public class ThreadedEchoHandler extends Thread
                             e.printStackTrace();
                         }
                     }
-                });
-
-                // Check for termination signal
-                if (msgHolder.getText().trim().equals("BYE"))
-                    done = true;
+                }
             }
             incoming.close();
         }
+        catch (EOFException | SocketException e)
+        {
+            threads.remove(this);
+            System.out.println("Disconnected -> " + uuid);
+        }
         catch (Exception e)
         {
-            System.out.println(e);
+            e.printStackTrace();
         }
-    }
-
-    public Socket getSocket()
-    {
-        return incoming;
-    }
-
-    public UUID getUuid()
-    {
-        return uuid;
-    }
-
-    public Socket getIncoming()
-    {
-        return incoming;
-    }
-
-    public List<ThreadedEchoHandler> getThreads()
-    {
-        return threads;
-    }
-
-    public ObjectInputStream getIn()
-    {
-        return in;
     }
 
     public ObjectOutputStream getOut()

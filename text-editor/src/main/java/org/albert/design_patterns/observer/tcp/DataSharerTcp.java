@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.io.*;
 import java.lang.ref.Cleaner;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.UUID;
 
 public class DataSharerTcp implements DataSharer
@@ -20,10 +21,10 @@ public class DataSharerTcp implements DataSharer
     private ObjectInputStream reader;
     private ObjectOutputStream writer;
 
-    public DataSharerTcp(JTextArea textArea) throws IOException, InterruptedException, ClassNotFoundException
+    public DataSharerTcp(JTextArea textArea, String serverIp) throws IOException, ClassNotFoundException
     {
         this.textArea = textArea;
-        initializeNetworking();
+        initializeNetworking(serverIp);
 
         cleanable = Cleaner.create().register(this, () -> {
             try
@@ -42,6 +43,7 @@ public class DataSharerTcp implements DataSharer
         running = true;
         MessageHolder initialMessage = (MessageHolder) reader.readObject();
         uuid = UUID.fromString(initialMessage.getUuid());
+        textArea.setText(initialMessage.getText() == null ? "" : initialMessage.getText());
         System.out.println(uuid);
 
         thread = createAsyncReceiveThread();
@@ -56,7 +58,7 @@ public class DataSharerTcp implements DataSharer
                 try
                 {
                     MessageHolder msgHolder = (MessageHolder) reader.readObject();
-                    System.out.println("Received: " + msgHolder.getText());
+//                    System.out.println("Received: " + msgHolder.getText());
 
                     short operationType = msgHolder.getOperationType();
                     int offset = msgHolder.getOffset();
@@ -67,9 +69,19 @@ public class DataSharerTcp implements DataSharer
                     if (operationType == DataSharer.OP_INSERT ||
                             operationType == DataSharer.OP_DELETE)
                     {
-                        sb.replace(offset, offset + length, text.equals("null") ? "" : text);
+                        sb.replace(offset, offset + length, text == null ? "" : text);
                         textArea.setText(sb.toString());
                     }
+                }
+                catch (SocketException e) // Socket closed
+                {
+                    System.out.println(e);
+                }
+                catch (EOFException e)
+                {
+                    // Occurs when the server closes, for example.
+                    System.out.println(e);
+                    destroy();
                 }
                 catch (IOException | ClassNotFoundException e)
                 {
@@ -79,10 +91,10 @@ public class DataSharerTcp implements DataSharer
         });
     }
 
-    private void initializeNetworking() throws IOException
+    private void initializeNetworking(String serverIp) throws IOException
     {
         final int port = 1234;
-        socket = new Socket("192.168.1.6", port);
+        socket = new Socket(serverIp, port);
         writer = new ObjectOutputStream(socket.getOutputStream());
         reader = new ObjectInputStream(socket.getInputStream());
     }
@@ -96,33 +108,19 @@ public class DataSharerTcp implements DataSharer
     }
 
     @Override
-    public void onInsert(int offset, int length, String text)
+    public void onInsert(int offset, int length, String text) throws IOException
     {
         MessageHolder msgHolder = new MessageHolder(uuid.toString(), OP_INSERT, offset, length, text);
-        try
-        {
-            writer.writeObject(msgHolder);
-            writer.flush();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
+        writer.writeObject(msgHolder);
+        writer.flush();
     }
 
     @Override
-    public void onDelete(int offset, int length, String text)
+    public void onDelete(int offset, int length, String text) throws IOException
     {
         MessageHolder msgHolder = new MessageHolder(uuid.toString(), OP_DELETE, offset, length, text);
-        try
-        {
-            writer.writeObject(msgHolder);
-            writer.flush();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
+        writer.writeObject(msgHolder);
+        writer.flush();
     }
 
     public UUID getUuid()

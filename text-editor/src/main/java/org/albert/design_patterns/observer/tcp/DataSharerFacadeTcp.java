@@ -1,7 +1,7 @@
 package org.albert.design_patterns.observer.tcp;
 
+import org.albert.component.TextEditor;
 import org.albert.design_patterns.observer.StateChangeObserver;
-import org.albert.design_patterns.observer.multicast.DataSharerMulticast;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -11,18 +11,20 @@ public class DataSharerFacadeTcp implements StateChangeObserver
 {
     private static DataSharerFacadeTcp INSTANCE;
 
-    public static DataSharerFacadeTcp getInstance(JTextArea textArea)
+    public static DataSharerFacadeTcp getInstance(TextEditor textEditor, JTextArea textArea)
     {
         if (DataSharerFacadeTcp.INSTANCE == null)
-            DataSharerFacadeTcp.INSTANCE = new DataSharerFacadeTcp(textArea);
+            DataSharerFacadeTcp.INSTANCE = new DataSharerFacadeTcp(textEditor, textArea);
         return DataSharerFacadeTcp.INSTANCE;
     }
 
+    private final TextEditor textEditor;
     private final JTextArea textArea;
     private DataSharerTcp dataSharer;
 
-    private DataSharerFacadeTcp(JTextArea textArea)
+    private DataSharerFacadeTcp(TextEditor textEditor, JTextArea textArea)
     {
+        this.textEditor = textEditor;
         this.textArea = textArea;
     }
 
@@ -31,19 +33,11 @@ public class DataSharerFacadeTcp implements StateChangeObserver
         return this.dataSharer.getUuid();
     }
 
-    public void openConnection()
+    public void openConnection(String serverIp) throws IOException, InterruptedException, ClassNotFoundException
     {
         if (this.dataSharer != null)
             return;
-
-        try
-        {
-            dataSharer = new DataSharerTcp(textArea);
-        }
-        catch (IOException | InterruptedException | ClassNotFoundException e)
-        {
-            throw new RuntimeException(e);
-        }
+        dataSharer = new DataSharerTcp(textArea, serverIp);
     }
 
     public void closeConnection()
@@ -57,14 +51,38 @@ public class DataSharerFacadeTcp implements StateChangeObserver
     @Override
     public void onInsert(int offset, int length, String text)
     {
-        if(dataSharer == null) return;
-        dataSharer.onInsert(offset, length, text);
+        if (dataSharer == null) return;
+        try
+        {
+            dataSharer.onInsert(offset, length, text);
+        }
+        catch (IOException e) // Socket Closed, for example
+        {
+            handleSocketClosed();
+        }
     }
 
     @Override
     public void onDelete(int offset, int length, String text)
     {
-        if(dataSharer == null) return;
-        dataSharer.onDelete(offset, length, text);
+        if (dataSharer == null) return;
+        try
+        {
+            dataSharer.onDelete(offset, length, text);
+        }
+        catch (IOException e) // Socket Closed, for example
+        {
+            handleSocketClosed();
+        }
     }
+
+    private void handleSocketClosed()
+    {
+        System.out.println("SOCKET CLOSED FORCEFULLY");
+        JOptionPane.showMessageDialog(
+                textEditor, "Disconnected from server", "Error", JOptionPane.ERROR_MESSAGE
+        );
+        textEditor.disconnect();
+    }
+
 }
