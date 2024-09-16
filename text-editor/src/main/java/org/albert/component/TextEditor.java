@@ -6,7 +6,7 @@ import org.albert.design_patterns.memento_v2.MementoDocumentFilter;
 import org.albert.design_patterns.memento_v2.TextAreaCaretaker;
 import org.albert.design_patterns.memento_v2.TextAreaOriginator;
 import org.albert.design_patterns.observer.DataSharerDocumentFilter;
-import org.albert.design_patterns.observer.DataSharerFacade;
+import org.albert.design_patterns.observer.tcp.DataSharerFacadeTcp;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -47,7 +47,7 @@ public class TextEditor extends JFrame
 
     private final TitleChangeDocumentListener titleChangeDocumentListener;
     private final MementoDocumentFilter mementoDocumentFilter;
-    private final DataSharerFacade dataSharerFacade;
+    private final DataSharerFacadeTcp dataSharerFacadeTcp;
     private boolean connected;
 
     private final TextAreaCaretaker textAreaCaretaker;
@@ -126,8 +126,8 @@ public class TextEditor extends JFrame
             titleState = TitleStates.NOT_MODIFIED;
         });
 
-        dataSharerFacade = DataSharerFacade.getInstance(textArea);
-        textAreaCaretaker = new TextAreaCaretaker(new TextAreaOriginator(textArea, dataSharerFacade));
+        dataSharerFacadeTcp = DataSharerFacadeTcp.getInstance(textArea);
+        textAreaCaretaker = new TextAreaCaretaker(new TextAreaOriginator(textArea, dataSharerFacadeTcp));
 
         // Problem: the DocumentListener executes AFTER the textArea has been updated.
 //        textArea.getDocument().addDocumentListener(new MementoDocumentListener(textAreaCaretaker));
@@ -235,11 +235,11 @@ public class TextEditor extends JFrame
         connectMenuItem = new JMenuItem("Connect");
         connectMenuItem.addActionListener(e -> {
             document.removeDocumentListener(titleChangeDocumentListener);
-            abstractDocument.setDocumentFilter(new DataSharerDocumentFilter(dataSharerFacade));
+            abstractDocument.setDocumentFilter(new DataSharerDocumentFilter(dataSharerFacadeTcp));
 
-            dataSharerFacade.openConnection();
+            dataSharerFacadeTcp.openConnection();
             connected = true;
-            this.setTitle(dataSharerFacade.getUuid().toString());
+            this.setTitle(dataSharerFacadeTcp.getUuid().toString());
         });
         multicastMenu.add(connectMenuItem);
 
@@ -301,7 +301,7 @@ public class TextEditor extends JFrame
 
     private void disconnect(Document document, AbstractDocument abstractDocument)
     {
-        dataSharerFacade.closeConnection();
+        dataSharerFacadeTcp.closeConnection();
         connected = false;
 
         document.addDocumentListener(titleChangeDocumentListener);

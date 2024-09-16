@@ -1,6 +1,6 @@
 package org.albert.design_patterns.memento_v2;
 
-import org.albert.design_patterns.observer.DataSharerFacade;
+import org.albert.design_patterns.observer.tcp.DataSharerFacadeTcp;
 import org.albert.util.OperationType;
 
 import javax.swing.text.AttributeSet;
@@ -10,12 +10,12 @@ import javax.swing.text.DocumentFilter;
 public class MementoDocumentWithDataSharerFilter extends DocumentFilter
 {
     private final TextAreaCaretaker textAreaCaretaker;
-    private final DataSharerFacade dataSharerFacade;
+    private final DataSharerFacadeTcp dataSharerFacadeTcp;
 
-    public MementoDocumentWithDataSharerFilter(TextAreaCaretaker textAreaCaretaker, DataSharerFacade dataSharerFacade)
+    public MementoDocumentWithDataSharerFilter(TextAreaCaretaker textAreaCaretaker, DataSharerFacadeTcp dataSharerFacadeTcp)
     {
         this.textAreaCaretaker = textAreaCaretaker;
-        this.dataSharerFacade = dataSharerFacade;
+        this.dataSharerFacadeTcp = dataSharerFacadeTcp;
     }
 
     @Override
@@ -82,11 +82,11 @@ public class MementoDocumentWithDataSharerFilter extends DocumentFilter
     {
         if (operationType == OperationType.INSERT)
         {
-            dataSharerFacade.onInsert(offset, length, text);
+            dataSharerFacadeTcp.onInsert(offset, length, text);
         }
         else if (operationType == OperationType.DELETE)
         {
-            dataSharerFacade.onDelete(offset, length, text);
+            dataSharerFacadeTcp.onDelete(offset, length, text);
         }
     }
 

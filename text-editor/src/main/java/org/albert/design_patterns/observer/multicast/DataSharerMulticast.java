@@ -1,4 +1,6 @@
-package org.albert.design_patterns.observer;
+package org.albert.design_patterns.observer.multicast;
+
+import org.albert.design_patterns.observer.DataSharer;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -6,7 +8,7 @@ import java.lang.ref.Cleaner;
 import java.net.*;
 import java.util.UUID;
 
-public class DataSharerStateChangeObserver implements StateChangeObserver
+public class DataSharerMulticast implements DataSharer
 {
     public static final short OP_BREAK = -1;
     public static final short OP_INSERT = 1;
@@ -29,7 +31,7 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
     private final Thread thread;
     private final MessageHandler messageHandler;
 
-    public DataSharerStateChangeObserver(JTextArea textArea) throws IOException, InterruptedException
+    public DataSharerMulticast(JTextArea textArea) throws IOException, InterruptedException
     {
         this.textArea = textArea;
         this.uuid = UUID.randomUUID();
@@ -100,18 +102,18 @@ public class DataSharerStateChangeObserver implements StateChangeObserver
 
                 if (!senderId.equals(this.uuid.toString())) continue;
 
-                if (operationType == DataSharerStateChangeObserver.OP_NEW_RESPONSE)
+                if (operationType == DataSharerMulticast.OP_NEW_RESPONSE)
                 {
                     sb.append(text);
                     var packet = messageHandler.constructPackage(senderId, OP_NEW_REQUEST_RECEIVED, 0, 0, "");
                     multicastSocket.send(packet);
                 }
-                else if (operationType == DataSharerStateChangeObserver.OP_NEW_RESPONSE_END)
+                else if (operationType == DataSharerMulticast.OP_NEW_RESPONSE_END)
                 {
                     sb.append(text);
                     break;
                 }
-                else if (operationType == DataSharerStateChangeObserver.OP_NEW_REQUEST_INIT)
+                else if (operationType == DataSharerMulticast.OP_NEW_REQUEST_INIT)
                     initConfimed = true;
             }
             textArea.setText(sb.toString());

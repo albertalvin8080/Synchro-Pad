@@ -1,6 +1,6 @@
 package org.albert.design_patterns.observer;
 
-import org.albert.design_patterns.memento_v2.TextAreaCaretaker;
+import org.albert.design_patterns.observer.tcp.DataSharerFacadeTcp;
 import org.albert.util.OperationType;
 
 import javax.swing.text.AttributeSet;
@@ -9,11 +9,11 @@ import javax.swing.text.DocumentFilter;
 
 public class DataSharerDocumentFilter extends DocumentFilter
 {
-    private final DataSharerFacade dataSharerFacade;
+    private final DataSharerFacadeTcp dataSharerFacadeTcp;
 
-    public DataSharerDocumentFilter(DataSharerFacade dataSharerFacade)
+    public DataSharerDocumentFilter(DataSharerFacadeTcp dataSharerFacadeTcp)
     {
-        this.dataSharerFacade = dataSharerFacade;
+        this.dataSharerFacadeTcp = dataSharerFacadeTcp;
     }
 
     @Override
@@ -62,11 +62,11 @@ public class DataSharerDocumentFilter extends DocumentFilter
     {
         if (operationType == OperationType.INSERT)
         {
-            dataSharerFacade.onInsert(offset, length, text);
+            dataSharerFacadeTcp.onInsert(offset, length, text);
         }
         else if (operationType == OperationType.DELETE)
         {
-            dataSharerFacade.onDelete(offset, length, text);
+            dataSharerFacadeTcp.onDelete(offset, length, text);
         }
     }
 }

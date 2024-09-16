@@ -1,6 +1,5 @@
 package org.albert.design_patterns.memento_v2;
 
-import org.albert.design_patterns.observer.DataSharerFacade;
 import org.albert.util.OperationType;
 
 import javax.swing.text.AttributeSet;

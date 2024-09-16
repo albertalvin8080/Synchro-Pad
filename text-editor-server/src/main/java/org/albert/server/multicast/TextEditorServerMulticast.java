@@ -1,4 +1,4 @@
-package org.albert.server;
+package org.albert.server.multicast;
 
 import java.io.*;
 import java.net.*;
@@ -7,7 +7,7 @@ import java.time.Duration;
 import java.util.Arrays;
 
 // javac TextEditorServer.java && java TextEditorServer
-public class TextEditorServer
+public class TextEditorServerMulticast
 {
     public static final short OP_BREAK = -1;
     public static final short OP_INSERT = 1;

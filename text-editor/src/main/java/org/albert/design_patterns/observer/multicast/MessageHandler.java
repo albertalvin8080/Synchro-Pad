@@ -1,9 +1,8 @@
-package org.albert.design_patterns.observer;
+package org.albert.design_patterns.observer.multicast;
 
 import javax.swing.*;
 import java.io.IOException;
 import java.net.*;
-import java.util.Arrays;
 import java.util.UUID;
 
 public class MessageHandler
@@ -91,8 +90,8 @@ public class MessageHandler
 //        ));
 
         final StringBuilder sb = new StringBuilder(textArea.getText());
-        if (operationType == DataSharerStateChangeObserver.OP_INSERT ||
-                operationType == DataSharerStateChangeObserver.OP_DELETE)
+        if (operationType == DataSharerMulticast.OP_INSERT ||
+                operationType == DataSharerMulticast.OP_DELETE)
         {
             sb.replace(offset, offset + length, text.equals("null") ? "" : text);
             textArea.setText(sb.toString());

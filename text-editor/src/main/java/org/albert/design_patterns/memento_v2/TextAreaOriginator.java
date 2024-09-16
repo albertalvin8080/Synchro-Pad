@@ -1,7 +1,7 @@
 package org.albert.design_patterns.memento_v2;
 
-import org.albert.design_patterns.observer.DataSharerFacade;
-import org.albert.design_patterns.observer.DataSharerStateChangeObserver;
+import org.albert.design_patterns.observer.tcp.DataSharerFacadeTcp;
+import org.albert.design_patterns.observer.multicast.DataSharerMulticast;
 import org.albert.util.OperationType;
 
 import javax.swing.*;
@@ -10,12 +10,12 @@ import java.util.Arrays;
 public class TextAreaOriginator
 {
     private final JTextArea textArea;
-    private final DataSharerFacade dataSharerFacade;
+    private final DataSharerFacadeTcp dataSharerFacadeTcp;
 
-    public TextAreaOriginator(JTextArea textArea, DataSharerFacade dataSharerFacade)
+    public TextAreaOriginator(JTextArea textArea, DataSharerFacadeTcp dataSharerFacadeTcp)
     {
         this.textArea = textArea;
-        this.dataSharerFacade = dataSharerFacade;
+        this.dataSharerFacadeTcp = dataSharerFacadeTcp;
     }
 
     public TextAreaMemento createMemento(int offset, int length, String text, OperationType operationType, String replacementText, boolean undoOrRedo)
@@ -69,11 +69,11 @@ public class TextAreaOriginator
             sb.replace(offset, length, replacementText);
             textArea.setText(sb.toString());
             // DANGER: You must pass the length WITHOUT the offset because the DataSharer will also sum it.
-            dataSharerFacade.onDelete(offset, text.length(), replacementText);
+            dataSharerFacadeTcp.onDelete(offset, text.length(), replacementText);
 
             System.out.println("ORIGINATOR INSERT");
             System.out.println(Arrays.toString(
-                    new Object[]{offset, text.length(), replacementText, DataSharerStateChangeObserver.OP_DELETE}
+                    new Object[]{offset, text.length(), replacementText, DataSharerMulticast.OP_DELETE}
             ));
         }
         else if (memento.operationType == OperationType.DELETE)
@@ -82,11 +82,11 @@ public class TextAreaOriginator
             sb.replace(offset, length, text);
             textArea.setText(sb.toString());
             // DANGER: You must pass the length WITHOUT the offset because the DataSharer will also sum it.
-            dataSharerFacade.onInsert(offset, replacementText.length(), text);
+            dataSharerFacadeTcp.onInsert(offset, replacementText.length(), text);
 
             System.out.println("ORIGINATOR DELETE");
             System.out.println(Arrays.toString(
-                    new Object[]{offset, replacementText.length(), text, DataSharerStateChangeObserver.OP_INSERT}
+                    new Object[]{offset, replacementText.length(), text, DataSharerMulticast.OP_INSERT}
             ));
         }
 

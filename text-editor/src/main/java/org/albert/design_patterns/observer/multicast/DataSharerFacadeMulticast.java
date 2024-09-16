@@ -1,24 +1,26 @@
-package org.albert.design_patterns.observer;
+package org.albert.design_patterns.observer.multicast;
+
+import org.albert.design_patterns.observer.StateChangeObserver;
 
 import javax.swing.*;
 import java.io.IOException;
 import java.util.UUID;
 
-public class DataSharerFacade implements StateChangeObserver
+public class DataSharerFacadeMulticast implements StateChangeObserver
 {
-    private static DataSharerFacade INSTANCE;
+    private static DataSharerFacadeMulticast INSTANCE;
 
-    public static DataSharerFacade getInstance(JTextArea textArea)
+    public static DataSharerFacadeMulticast getInstance(JTextArea textArea)
     {
-        if (DataSharerFacade.INSTANCE == null)
-            DataSharerFacade.INSTANCE = new DataSharerFacade(textArea);
-        return DataSharerFacade.INSTANCE;
+        if (DataSharerFacadeMulticast.INSTANCE == null)
+            DataSharerFacadeMulticast.INSTANCE = new DataSharerFacadeMulticast(textArea);
+        return DataSharerFacadeMulticast.INSTANCE;
     }
 
     private final JTextArea textArea;
-    private DataSharerStateChangeObserver dataSharer;
+    private DataSharerMulticast dataSharer;
 
-    private DataSharerFacade(JTextArea textArea)
+    private DataSharerFacadeMulticast(JTextArea textArea)
     {
         this.textArea = textArea;
     }
@@ -35,7 +37,7 @@ public class DataSharerFacade implements StateChangeObserver
 
         try
         {
-            dataSharer = new DataSharerStateChangeObserver(textArea);
+            dataSharer = new DataSharerMulticast(textArea);
         }
         catch (IOException | InterruptedException e)
         {
@@ -45,6 +47,8 @@ public class DataSharerFacade implements StateChangeObserver
 
     public void closeConnection()
     {
+        if (this.dataSharer == null)
+            return;
         dataSharer.destroy();
         dataSharer = null;
     }
