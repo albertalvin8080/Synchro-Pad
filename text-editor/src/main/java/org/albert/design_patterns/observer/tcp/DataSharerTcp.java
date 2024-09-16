@@ -1,12 +1,10 @@
 package org.albert.design_patterns.observer.tcp;
 
 import org.albert.design_patterns.observer.DataSharer;
+import org.albert.util.MessageHolder;
 
 import javax.swing.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.lang.ref.Cleaner;
 import java.net.Socket;
 import java.util.UUID;
@@ -19,10 +17,10 @@ public class DataSharerTcp implements DataSharer
     private volatile boolean running;
     private final Thread thread;
     private Socket socket;
-    private BufferedReader reader;
-    private PrintWriter writer;
+    private ObjectInputStream reader;
+    private ObjectOutputStream writer;
 
-    public DataSharerTcp(JTextArea textArea) throws IOException, InterruptedException
+    public DataSharerTcp(JTextArea textArea) throws IOException, InterruptedException, ClassNotFoundException
     {
         this.textArea = textArea;
         initializeNetworking();
@@ -42,7 +40,8 @@ public class DataSharerTcp implements DataSharer
         });
 
         running = true;
-        uuid = UUID.fromString(reader.readLine());
+        MessageHolder initialMessage = (MessageHolder) reader.readObject();
+        uuid = UUID.fromString(initialMessage.getUuid());
         System.out.println(uuid);
 
         thread = createAsyncReceiveThread();
@@ -56,18 +55,13 @@ public class DataSharerTcp implements DataSharer
             {
                 try
                 {
-                    String msg = reader.readLine();
-                    System.out.println("[" + msg + "]");
+                    MessageHolder msgHolder = (MessageHolder) reader.readObject();
+                    System.out.println("Received: " + msgHolder.getText());
 
-                    String[] parts = msg.split(":", 5);
-//                    String senderId = parts[0];
-                    short operationType = Short.parseShort(parts[1]);
-                    int offset = Integer.parseInt(parts[2]);
-                    int length = Integer.parseInt(parts[3]);
-                    String text = parts[4];
-                    System.out.println(text);
-                    text = text.replaceAll("\\$n", "\n");
-                    System.out.println(text);
+                    short operationType = msgHolder.getOperationType();
+                    int offset = msgHolder.getOffset();
+                    int length = msgHolder.getLength();
+                    String text = msgHolder.getText();
 
                     final StringBuilder sb = new StringBuilder(textArea.getText());
                     if (operationType == DataSharer.OP_INSERT ||
@@ -77,7 +71,7 @@ public class DataSharerTcp implements DataSharer
                         textArea.setText(sb.toString());
                     }
                 }
-                catch (IOException e)
+                catch (IOException | ClassNotFoundException e)
                 {
                     throw new RuntimeException(e);
                 }
@@ -89,8 +83,8 @@ public class DataSharerTcp implements DataSharer
     {
         final int port = 1234;
         socket = new Socket("192.168.1.6", port);
-        reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        writer = new PrintWriter(socket.getOutputStream(), true);
+        writer = new ObjectOutputStream(socket.getOutputStream());
+        reader = new ObjectInputStream(socket.getInputStream());
     }
 
     @Override
@@ -104,26 +98,31 @@ public class DataSharerTcp implements DataSharer
     @Override
     public void onInsert(int offset, int length, String text)
     {
-        String msg = new StringBuilder(uuid.toString())
-                .append(":").append(OP_INSERT)
-                .append(":").append(offset)
-                .append(":").append(length)
-                .append(":").append(text.replaceAll("\n", "$n"))
-                .toString();
-//        System.out.println("["+msg+"]");
-        writer.println(msg);
+        MessageHolder msgHolder = new MessageHolder(uuid.toString(), OP_INSERT, offset, length, text);
+        try
+        {
+            writer.writeObject(msgHolder);
+            writer.flush();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void onDelete(int offset, int length, String text)
     {
-        String msg = new StringBuilder(uuid.toString())
-                .append(":").append(OP_DELETE)
-                .append(":").append(offset)
-                .append(":").append(length)
-                .append(":").append(text.replaceAll("\n", "$n"))
-                .toString();
-        writer.println(msg);
+        MessageHolder msgHolder = new MessageHolder(uuid.toString(), OP_DELETE, offset, length, text);
+        try
+        {
+            writer.writeObject(msgHolder);
+            writer.flush();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     public UUID getUuid()

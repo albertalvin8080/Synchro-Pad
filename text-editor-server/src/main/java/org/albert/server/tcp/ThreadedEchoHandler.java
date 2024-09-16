@@ -1,9 +1,8 @@
 package org.albert.server.tcp;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import org.albert.util.MessageHolder;
+
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.List;
@@ -14,20 +13,30 @@ public class ThreadedEchoHandler extends Thread
     private final UUID uuid;
     private final Socket incoming;
     private final List<ThreadedEchoHandler> threads;
-    private final BufferedReader in;
-    private final PrintWriter out;
+    /*
+    * Fun fact: you must not create a new ObjectOutputStream nor ObjectInputStream
+    * because it corrupts the header.
+    * >>
+    * src: https://stackoverflow.com/questions/2393179/streamcorruptedexception-invalid-type-code-ac
+    * */
+    private final ObjectInputStream in;
+    private final ObjectOutputStream out;
 
     public ThreadedEchoHandler(Socket i, List<ThreadedEchoHandler> threads) throws IOException
     {
         uuid = UUID.randomUUID();
-//        System.out.println(uuid);
         incoming = i;
         this.threads = threads;
-        in = new BufferedReader
-                (new InputStreamReader(incoming.getInputStream()));
-        out = new PrintWriter
-                (incoming.getOutputStream(), true /* autoFlush */);
-        out.println(uuid); // Sending the UUID
+
+        // Object streams to handle MessageHolder objects
+        out = new ObjectOutputStream(incoming.getOutputStream());
+        in = new ObjectInputStream(incoming.getInputStream());
+
+        // Sending the UUID in an initial message
+        MessageHolder initialMessage = new MessageHolder(uuid.toString(), (short) 0, 0, 0, "Connected");
+        out.writeObject(initialMessage);
+        out.flush();
+        System.out.println("Sent -> " + initialMessage.getUuid());
     }
 
     @Override
@@ -38,24 +47,24 @@ public class ThreadedEchoHandler extends Thread
             boolean done = false;
             while (!done)
             {
-                String msg = in.readLine();
-                System.out.println(msg); // debug
-                if (msg == null)
+                MessageHolder msgHolder = (MessageHolder) in.readObject();
+
+                if (msgHolder == null)
                 {
                     done = true;
                     continue;
                 }
 
-//                out.println("Echo (" + uuid + "): " + msg);
+                System.out.println("Received: " + msgHolder.getText()); // Debugging
 
                 threads.forEach(threadedEchoHandler -> {
                     if (threadedEchoHandler != this)
                     {
                         try
                         {
-                            var socket = threadedEchoHandler.getSocket();
-                            PrintWriter newOut = new PrintWriter(socket.getOutputStream(), true);
-                            newOut.println(msg);
+                            final ObjectOutputStream newOut = threadedEchoHandler.getOut();
+                            newOut.writeObject(msgHolder);
+                            newOut.flush();
                         }
                         catch (SocketException e)
                         {
@@ -69,7 +78,8 @@ public class ThreadedEchoHandler extends Thread
                     }
                 });
 
-                if (msg.trim().equals("BYE"))
+                // Check for termination signal
+                if (msgHolder.getText().trim().equals("BYE"))
                     done = true;
             }
             incoming.close();
@@ -83,5 +93,30 @@ public class ThreadedEchoHandler extends Thread
     public Socket getSocket()
     {
         return incoming;
+    }
+
+    public UUID getUuid()
+    {
+        return uuid;
+    }
+
+    public Socket getIncoming()
+    {
+        return incoming;
+    }
+
+    public List<ThreadedEchoHandler> getThreads()
+    {
+        return threads;
+    }
+
+    public ObjectInputStream getIn()
+    {
+        return in;
+    }
+
+    public ObjectOutputStream getOut()
+    {
+        return out;
     }
 }

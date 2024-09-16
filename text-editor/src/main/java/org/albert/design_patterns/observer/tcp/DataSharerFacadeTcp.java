@@ -40,7 +40,7 @@ public class DataSharerFacadeTcp implements StateChangeObserver
         {
             dataSharer = new DataSharerTcp(textArea);
         }
-        catch (IOException | InterruptedException e)
+        catch (IOException | InterruptedException | ClassNotFoundException e)
         {
             throw new RuntimeException(e);
         }
