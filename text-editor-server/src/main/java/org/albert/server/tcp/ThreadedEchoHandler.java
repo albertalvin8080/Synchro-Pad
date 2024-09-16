@@ -38,15 +38,15 @@ public class ThreadedEchoHandler extends Thread
             boolean done = false;
             while (!done)
             {
-                String str = in.readLine();
-                 System.out.println (uuid + " - " + str); // debug
-                if (str == null)
+                String msg = in.readLine();
+                System.out.println(msg); // debug
+                if (msg == null)
                 {
                     done = true;
                     continue;
                 }
 
-//                out.println("Echo (" + uuid + "): " + str);
+//                out.println("Echo (" + uuid + "): " + msg);
 
                 threads.forEach(threadedEchoHandler -> {
                     if (threadedEchoHandler != this)
@@ -55,8 +55,7 @@ public class ThreadedEchoHandler extends Thread
                         {
                             var socket = threadedEchoHandler.getSocket();
                             PrintWriter newOut = new PrintWriter(socket.getOutputStream(), true);
-                            System.out.println(threadedEchoHandler + " ->>> " + uuid); // debug
-                            newOut.println(str);
+                            newOut.println(msg);
                         }
                         catch (SocketException e)
                         {
@@ -70,7 +69,7 @@ public class ThreadedEchoHandler extends Thread
                     }
                 });
 
-                if (str.trim().equals("BYE"))
+                if (msg.trim().equals("BYE"))
                     done = true;
             }
             incoming.close();

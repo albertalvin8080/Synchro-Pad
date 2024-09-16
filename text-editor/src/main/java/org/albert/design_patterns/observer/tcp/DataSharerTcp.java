@@ -13,14 +13,11 @@ import java.util.UUID;
 
 public class DataSharerTcp implements DataSharer
 {
-    public static final short OP_INSERT = 1;
-    public static final short OP_DELETE = 2;
-
     private final UUID uuid;
     private final JTextArea textArea;
     private final Cleaner.Cleanable cleanable;
     private volatile boolean running;
-//    private final Thread thread;
+    private final Thread thread;
     private Socket socket;
     private BufferedReader reader;
     private PrintWriter writer;
@@ -48,8 +45,44 @@ public class DataSharerTcp implements DataSharer
         uuid = UUID.fromString(reader.readLine());
         System.out.println(uuid);
 
-//        thread = createAsyncReceiveThread();
-//        thread.start();
+        thread = createAsyncReceiveThread();
+        thread.start();
+    }
+
+    private Thread createAsyncReceiveThread()
+    {
+        return new Thread(() -> {
+            while (running)
+            {
+                try
+                {
+                    String msg = reader.readLine();
+                    System.out.println("[" + msg + "]");
+
+                    String[] parts = msg.split(":", 5);
+//                    String senderId = parts[0];
+                    short operationType = Short.parseShort(parts[1]);
+                    int offset = Integer.parseInt(parts[2]);
+                    int length = Integer.parseInt(parts[3]);
+                    String text = parts[4];
+                    System.out.println(text);
+                    text = text.replaceAll("\\$n", "\n");
+                    System.out.println(text);
+
+                    final StringBuilder sb = new StringBuilder(textArea.getText());
+                    if (operationType == DataSharer.OP_INSERT ||
+                            operationType == DataSharer.OP_DELETE)
+                    {
+                        sb.replace(offset, offset + length, text.equals("null") ? "" : text);
+                        textArea.setText(sb.toString());
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 
     private void initializeNetworking() throws IOException
@@ -63,7 +96,9 @@ public class DataSharerTcp implements DataSharer
     @Override
     public void destroy()
     {
-
+        running = false;
+        thread.interrupt();
+        cleanable.clean();
     }
 
     @Override
@@ -73,9 +108,10 @@ public class DataSharerTcp implements DataSharer
                 .append(":").append(OP_INSERT)
                 .append(":").append(offset)
                 .append(":").append(length)
-                .append(":").append(text)
+                .append(":").append(text.replaceAll("\n", "$n"))
                 .toString();
-        writer.print(msg);
+//        System.out.println("["+msg+"]");
+        writer.println(msg);
     }
 
     @Override
@@ -85,9 +121,9 @@ public class DataSharerTcp implements DataSharer
                 .append(":").append(OP_DELETE)
                 .append(":").append(offset)
                 .append(":").append(length)
-                .append(":").append(text)
+                .append(":").append(text.replaceAll("\n", "$n"))
                 .toString();
-        writer.print(msg);
+        writer.println(msg);
     }
 
     public UUID getUuid()
