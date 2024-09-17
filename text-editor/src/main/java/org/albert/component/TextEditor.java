@@ -243,31 +243,19 @@ public class TextEditor extends JFrame
 
             // Case for user cancel
             if (result != JOptionPane.OK_OPTION) return;
-            // In case the user is currently connected and wants to connect to another server.
-            else if(connected) disconnect();
+                // In case the user is currently connected and wants to connect to another server.
+            else if (connected) disconnect();
 
-            String serverIp = ipPanel.getIpAddress();
-            connected = connect(serverIp);
-
-            if (connected)
-            {
-                this.setTitle(dataSharerFacadeTcp.getUuid().toString());
-                document.removeDocumentListener(titleChangeDocumentListener);
-                abstractDocument.setDocumentFilter(new DataSharerDocumentFilter(dataSharerFacadeTcp));
-            }
-            else
-            {
-//                disconnect();
-                JOptionPane.showMessageDialog(
-                        this, "Connection refused.", "Error", JOptionPane.ERROR_MESSAGE
-                );
-            }
+            // Move connection logic to a background thread to avoid blocking UI
+            SwingWorker<Boolean, Void> worker = new OpenConnectionSwingWorker(ipPanel);
+            worker.execute();
         });
         tcpMenu.add(connectMenuItem);
 
         disconnectMenuItem = new JMenuItem("Disconnect");
         disconnectMenuItem.addActionListener(e -> {
-            disconnect();
+            if (connected)
+                disconnect();
         });
         tcpMenu.add(disconnectMenuItem);
 
@@ -378,27 +366,9 @@ public class TextEditor extends JFrame
         return connected;
     }
 
-    public boolean connect(String serverIp)
-    {
-        try
-        {
-            dataSharerFacadeTcp.openConnection(serverIp);
-            return true;
-        }
-        catch (ConnectException e)
-        {
-            // Connection Refused
-            System.out.println(e);
-        }
-        catch (IOException | InterruptedException | ClassNotFoundException e)
-        {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
     private final Document document;
     private final AbstractDocument abstractDocument;
+
     public void disconnect()
     {
         dataSharerFacadeTcp.closeConnection();
@@ -408,6 +378,56 @@ public class TextEditor extends JFrame
         abstractDocument.setDocumentFilter(mementoDocumentFilter);
 
         this.setTitle(baseTitle);
+    }
+
+    private final TextEditor superTextEditor = this;
+    private class OpenConnectionSwingWorker extends SwingWorker<Boolean, Void>
+    {
+        private final CustomIpInputPanel ipPanel;
+        private final ConnectingDialog connectingDialog;
+
+        private OpenConnectionSwingWorker(CustomIpInputPanel ipPanel)
+        {
+            this.ipPanel = ipPanel;
+            this.connectingDialog = new ConnectingDialog(superTextEditor, this);
+        }
+
+        @Override
+        protected Boolean doInBackground()
+        {
+            String serverIp = ipPanel.getIpAddress();
+            return dataSharerFacadeTcp.openConnection(serverIp);
+        }
+
+        @Override
+        protected void done()
+        {
+            // Prevents the worker from executing if the user presses "cancel" in the ConnectingDialog
+            if (isCancelled()) return;
+
+            try
+            {
+                connected = get();
+                connectingDialog.dispose(); // Disposes the Connecting Dialog
+
+                if (connected)
+                {
+                    setTitle(dataSharerFacadeTcp.getUuid().toString());
+                    document.removeDocumentListener(titleChangeDocumentListener);
+                    abstractDocument.setDocumentFilter(new DataSharerDocumentFilter(dataSharerFacadeTcp));
+                }
+                else
+                {
+                    JOptionPane.showMessageDialog(
+                            TextEditor.this, "Connection refused.", "Error", JOptionPane.ERROR_MESSAGE
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                ex.printStackTrace();
+            }
+        }
     }
     // !============== CONNECTION SECTION ==============
 }

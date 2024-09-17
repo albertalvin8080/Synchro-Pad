@@ -19,7 +19,7 @@ public class CustomIpInputPanel extends JPanel
 
     public CustomIpInputPanel()
     {
-        setLayout(new FlowLayout());
+        this.setLayout(new FlowLayout());
 
         for (int i = 0; i < 4; i++)
         {
@@ -40,11 +40,11 @@ public class CustomIpInputPanel extends JPanel
                 }
             });
 
-            add(ipFields[i]);
+            this.add(ipFields[i]);
 
             if (i < 3)
             {
-                add(new JLabel("."));  // Add a dot between fields
+                this.add(new JLabel("."));  // Add a dot between fields
             }
         }
 

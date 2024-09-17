@@ -5,6 +5,8 @@ import org.albert.design_patterns.observer.StateChangeObserver;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
 import java.util.UUID;
 
 public class DataSharerFacadeTcp implements StateChangeObserver
@@ -33,11 +35,25 @@ public class DataSharerFacadeTcp implements StateChangeObserver
         return this.dataSharer.getUuid();
     }
 
-    public void openConnection(String serverIp) throws IOException, InterruptedException, ClassNotFoundException
+    public boolean openConnection(String serverIp)
     {
         if (this.dataSharer != null)
-            return;
-        dataSharer = new DataSharerTcp(textArea, serverIp);
+            return false;
+        try
+        {
+            dataSharer = new DataSharerTcp(textArea, serverIp);
+            return true;
+        }
+        catch (ConnectException | UnknownHostException e)
+        {
+            // Connection Refused / UnknownHostException
+            System.out.println(e);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     public void closeConnection()
