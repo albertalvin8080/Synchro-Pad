@@ -64,15 +64,15 @@ public class TextEditor extends JFrame
 
     public TextEditor()
     {
-//        try
-//        {
-//            UIManager.setLookAndFeel(new FlatLightLaf());
-//            // UIManager.setLookAndFeel(new FlatDarkLaf());
-//        }
-//        catch (UnsupportedLookAndFeelException e)
-//        {
-//            e.printStackTrace();
-//        }
+        try
+        {
+            UIManager.setLookAndFeel(new FlatLightLaf());
+            // UIManager.setLookAndFeel(new FlatDarkLaf());
+        }
+        catch (UnsupportedLookAndFeelException e)
+        {
+            e.printStackTrace();
+        }
 
         // ------- TEXTAREA -------
         textArea = new JTextArea();
@@ -236,21 +236,28 @@ public class TextEditor extends JFrame
         tcpMenu = new JMenu("TCP");
         connectMenuItem = new JMenuItem("Connect");
         connectMenuItem.addActionListener(e -> {
-            document.removeDocumentListener(titleChangeDocumentListener);
-            abstractDocument.setDocumentFilter(new DataSharerDocumentFilter(dataSharerFacadeTcp));
+            CustomIpInputPanel ipPanel = new CustomIpInputPanel();
+            int result = JOptionPane.showConfirmDialog(
+                    this, ipPanel, "Enter IP Address", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE
+            );
 
-            String serverIp = JOptionPane.showInputDialog(
-                    this, "Provide the server's IP", "IP", JOptionPane.PLAIN_MESSAGE, null, null, "192.168.1.6"
-            ).toString();
+            // Case for user cancel
+            if (result != JOptionPane.OK_OPTION) return;
+            // In case the user is currently connected and wants to connect to another server.
+            else if(connected) disconnect();
+
+            String serverIp = ipPanel.getIpAddress();
             connected = connect(serverIp);
 
             if (connected)
             {
                 this.setTitle(dataSharerFacadeTcp.getUuid().toString());
+                document.removeDocumentListener(titleChangeDocumentListener);
+                abstractDocument.setDocumentFilter(new DataSharerDocumentFilter(dataSharerFacadeTcp));
             }
             else
             {
-                disconnect();
+//                disconnect();
                 JOptionPane.showMessageDialog(
                         this, "Connection refused.", "Error", JOptionPane.ERROR_MESSAGE
                 );
@@ -314,19 +321,7 @@ public class TextEditor extends JFrame
         this.setVisible(true);
     }
 
-    private Document document;
-    private AbstractDocument abstractDocument;
-    public void disconnect()
-    {
-        dataSharerFacadeTcp.closeConnection();
-        connected = false;
-
-        document.addDocumentListener(titleChangeDocumentListener);
-        abstractDocument.setDocumentFilter(mementoDocumentFilter);
-
-        this.setTitle(baseTitle);
-    }
-
+    // ============== TITLE SECTION ==============
     public void changeTitle(String fileName)
     {
         this.setTitle(fileName + " - " + baseTitle);
@@ -375,7 +370,9 @@ public class TextEditor extends JFrame
             }
         }
     }
+    // !============== TITLE SECTION ==============
 
+    // ============== CONNECTION SECTION ==============
     public boolean isConnected()
     {
         return connected;
@@ -399,4 +396,18 @@ public class TextEditor extends JFrame
         }
         return false;
     }
+
+    private final Document document;
+    private final AbstractDocument abstractDocument;
+    public void disconnect()
+    {
+        dataSharerFacadeTcp.closeConnection();
+        connected = false;
+
+        document.addDocumentListener(titleChangeDocumentListener);
+        abstractDocument.setDocumentFilter(mementoDocumentFilter);
+
+        this.setTitle(baseTitle);
+    }
+    // !============== CONNECTION SECTION ==============
 }

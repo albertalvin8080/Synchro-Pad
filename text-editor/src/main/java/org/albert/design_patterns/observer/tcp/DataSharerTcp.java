@@ -64,24 +64,22 @@ public class DataSharerTcp implements DataSharer
                     int offset = msgHolder.getOffset();
                     int length = msgHolder.getLength();
                     String text = msgHolder.getText();
+                    text = text == null ? "" : text;
 
                     final StringBuilder sb = new StringBuilder(textArea.getText());
                     if (operationType == DataSharer.OP_INSERT ||
                             operationType == DataSharer.OP_DELETE)
                     {
                         final int offSetPlusLength = offset + length;
-                        sb.replace(offset, offSetPlusLength, text == null ? "" : text);
-                        final int oldCaretPosition = textArea.getCaretPosition();
+                        sb.replace(offset, offSetPlusLength, text);
+                        final int oldCaretPos = textArea.getCaretPosition();
                         textArea.setText(sb.toString());
-                        System.out.println("OLD CARET: " + oldCaretPosition);
-                        System.out.println("Length: " + length);
-                        System.out.println("Offset: " + offset);
-                        if(oldCaretPosition < offSetPlusLength)
-                            textArea.setCaretPosition(oldCaretPosition);
-                        else if (oldCaretPosition > offSetPlusLength)
-                        {
-                            textArea.setCaretPosition(oldCaretPosition + length);
-                        }
+                        textArea.setCaretPosition(oldCaretPos);
+
+//                        System.out.println("OLD CARET: " + oldCaretPos);
+//                        System.out.println("Length: " + length);
+//                        System.out.println("Offset: " + offset);
+//                        System.out.println("Text length: " + text.length());
                     }
                 }
                 catch (IllegalArgumentException e) // Invalid caret position
