@@ -69,9 +69,24 @@ public class DataSharerTcp implements DataSharer
                     if (operationType == DataSharer.OP_INSERT ||
                             operationType == DataSharer.OP_DELETE)
                     {
-                        sb.replace(offset, offset + length, text == null ? "" : text);
+                        final int offSetPlusLength = offset + length;
+                        sb.replace(offset, offSetPlusLength, text == null ? "" : text);
+                        final int oldCaretPosition = textArea.getCaretPosition();
                         textArea.setText(sb.toString());
+                        System.out.println("OLD CARET: " + oldCaretPosition);
+                        System.out.println("Length: " + length);
+                        System.out.println("Offset: " + offset);
+                        if(oldCaretPosition < offSetPlusLength)
+                            textArea.setCaretPosition(oldCaretPosition);
+                        else if (oldCaretPosition > offSetPlusLength)
+                        {
+                            textArea.setCaretPosition(oldCaretPosition + length);
+                        }
                     }
+                }
+                catch (IllegalArgumentException e) // Invalid caret position
+                {
+                    textArea.setCaretPosition(textArea.getText().length());
                 }
                 catch (SocketException e) // Socket closed
                 {

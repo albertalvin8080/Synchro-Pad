@@ -22,6 +22,7 @@
               <goal>shade</goal>
             </goals>
             <configuration>
+              <outputFile>../fat-jar/text-editor-${project.version}.jar</outputFile>
               <transformers>
                 <transformer>
                   <mainClass>org.albert.App</mainClass>

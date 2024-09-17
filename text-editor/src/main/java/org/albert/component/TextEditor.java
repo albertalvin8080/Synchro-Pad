@@ -64,15 +64,15 @@ public class TextEditor extends JFrame
 
     public TextEditor()
     {
-        try
-        {
-            UIManager.setLookAndFeel(new FlatLightLaf());
-            // UIManager.setLookAndFeel(new FlatDarkLaf());
-        }
-        catch (UnsupportedLookAndFeelException e)
-        {
-            e.printStackTrace();
-        }
+//        try
+//        {
+//            UIManager.setLookAndFeel(new FlatLightLaf());
+//            // UIManager.setLookAndFeel(new FlatDarkLaf());
+//        }
+//        catch (UnsupportedLookAndFeelException e)
+//        {
+//            e.printStackTrace();
+//        }
 
         // ------- TEXTAREA -------
         textArea = new JTextArea();
