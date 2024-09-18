@@ -1,2 +1,2 @@
 # Description
-A text editor using Java Swing and design patterns.
+Synchro Pad is a TCP text editor made with Java Swing and design patterns. Its instances use TCP java sockets to communicate with the server, which is responsible for synchronizing the behavior of all instances.
