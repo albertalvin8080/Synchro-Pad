@@ -14,37 +14,33 @@ public class DataSharerTcp implements DataSharer
 {
     private final UUID uuid;
     private final JTextArea textArea;
-    private final Cleaner.Cleanable cleanable;
     private volatile boolean running;
     private final Thread thread;
-    private Socket socket;
-    private ObjectInputStream reader;
-    private ObjectOutputStream writer;
+    private final ObjectInputStream reader;
+    private final ObjectOutputStream writer;
 
-    public DataSharerTcp(JTextArea textArea, String serverIp) throws IOException, ClassNotFoundException
+    public DataSharerTcp(UUID uuid, JTextArea textArea, ObjectInputStream reader, ObjectOutputStream writer) throws IOException, ClassNotFoundException
     {
+        this.uuid = uuid;
         this.textArea = textArea;
-        initializeNetworking(serverIp);
-
-        cleanable = Cleaner.create().register(this, () -> {
-            try
-            {
-                if (socket != null && !socket.isClosed())
-                {
-                    socket.close();
-                }
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-        });
+        this.reader = reader;
+        this.writer = writer;
 
         running = true;
+
+        // Must request the text from the server
+        final MessageHolder msgHolder = new MessageHolder(
+                uuid.toString(),
+                OP_INIT_GLOBAL,
+                0,
+                0,
+                ""
+        );
+        writer.writeObject(msgHolder);
+        writer.flush();
+
         MessageHolder initialMessage = (MessageHolder) reader.readObject();
-        uuid = UUID.fromString(initialMessage.getUuid());
         textArea.setText(initialMessage.getText() == null ? "" : initialMessage.getText());
-        System.out.println(uuid);
 
         thread = createAsyncReceiveThread();
         thread.start();
@@ -76,10 +72,11 @@ public class DataSharerTcp implements DataSharer
                         textArea.setText(sb.toString());
                         textArea.setCaretPosition(oldCaretPos);
 
-//                        System.out.println("OLD CARET: " + oldCaretPos);
-//                        System.out.println("Length: " + length);
-//                        System.out.println("Offset: " + offset);
-//                        System.out.println("Text length: " + text.length());
+                        System.out.println("OLD CARET:   " + oldCaretPos);
+                        System.out.println("Offset:      " + offset);
+                        System.out.println("Length:      " + length);
+                        System.out.println("Text:        " + text);
+                        System.out.println("Text length: " + text.length());
                     }
                 }
                 catch (IllegalArgumentException e) // Invalid caret position
@@ -104,20 +101,11 @@ public class DataSharerTcp implements DataSharer
         });
     }
 
-    private void initializeNetworking(String serverIp) throws IOException
-    {
-        final int port = 1234;
-        socket = new Socket(serverIp, port);
-        writer = new ObjectOutputStream(socket.getOutputStream());
-        reader = new ObjectInputStream(socket.getInputStream());
-    }
-
     @Override
     public void destroy()
     {
         running = false;
         thread.interrupt();
-        cleanable.clean();
     }
 
     @Override
@@ -134,10 +122,5 @@ public class DataSharerTcp implements DataSharer
         MessageHolder msgHolder = new MessageHolder(uuid.toString(), OP_DELETE, offset, length, text);
         writer.writeObject(msgHolder);
         writer.flush();
-    }
-
-    public UUID getUuid()
-    {
-        return uuid;
     }
 }

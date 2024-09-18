@@ -36,7 +36,7 @@ public class ThreadedEchoHandler extends Thread
         this.sb = sb;
 
         // Sending the UUID in an initial message
-        MessageHolder initialMessage = new MessageHolder(uuid.toString(), (short) 0, 0, 0, sb.toString());
+        MessageHolder initialMessage = new MessageHolder(uuid.toString(), (short) 0, 0, 0, "");
         out.writeObject(initialMessage);
         out.flush();
         System.out.println("Init -> " + initialMessage.getUuid());
@@ -56,15 +56,18 @@ public class ThreadedEchoHandler extends Thread
                 int length = msgHolder.getLength();
                 String text = msgHolder.getText();
 
+                // those two should be placed into its own class
                 if (operationType == DataSharer.OP_INSERT ||
                         operationType == DataSharer.OP_DELETE)
                 {
                     sb.replace(offset, offset + length, text == null ? "" : text);
                 }
-
-                if (msgHolder == null)
+                else if(operationType == DataSharer.OP_INIT_GLOBAL)
                 {
-                    done = true;
+                    MessageHolder initialMessage = new MessageHolder("", (short) 0, 0, 0, sb.toString());
+                    out.writeObject(initialMessage);
+                    out.flush();
+                    // here would happen the subscription to the global text thread list.
                     continue;
                 }
 

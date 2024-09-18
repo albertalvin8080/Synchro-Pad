@@ -33,7 +33,7 @@ public class SaveFileCommand implements Command
         final int option;
         final File file;
 
-        // If there's currently a multicast connection, this prevents overriding previous opened files
+        // If there's currently a multicast/tcp connection, this prevents overriding previous opened files
         // with the content of the connection.
         if(frame.isConnected())
             filePathHolder.setCurrentFilePath(null);
@@ -55,7 +55,7 @@ public class SaveFileCommand implements Command
             file = new File(selectedFile.getAbsolutePath());
             filePathHolder.setCurrentFilePath(selectedFile.getAbsolutePath());
 
-            // Prevents changing the title if there's currently a multicast connection.
+            // Prevents changing the title if there's currently a multicast/tcp connection.
             if(!frame.isConnected())
                 frame.changeTitle(file.getName());
         }

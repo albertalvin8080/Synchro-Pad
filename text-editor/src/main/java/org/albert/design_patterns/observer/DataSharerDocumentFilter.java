@@ -55,6 +55,8 @@ public class DataSharerDocumentFilter extends DocumentFilter
 
     private void performStateChange(int offset, int length, String text, OperationType operationType)
     {
+        // Only the AWT-EventQueue-0 thread handles user input.
+        // Any other thread is just receiving data from the server.
         if (!Thread.currentThread().getName().equals("AWT-EventQueue-0")) return;
 
         shareData(offset, length, text, operationType);

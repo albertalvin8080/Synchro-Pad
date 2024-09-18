@@ -2,10 +2,14 @@ package org.albert.design_patterns.observer.tcp;
 
 import org.albert.component.TextEditor;
 import org.albert.design_patterns.observer.StateChangeObserver;
+import org.albert.util.MessageHolder;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ConnectException;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.UUID;
 
@@ -23,6 +27,7 @@ public class DataSharerFacadeTcp implements StateChangeObserver
     private final TextEditor textEditor;
     private final JTextArea textArea;
     private DataSharerTcp dataSharer;
+    private UUID uuid;
 
     private DataSharerFacadeTcp(TextEditor textEditor, JTextArea textArea)
     {
@@ -30,9 +35,23 @@ public class DataSharerFacadeTcp implements StateChangeObserver
         this.textArea = textArea;
     }
 
+    private Socket socket;
+    private ObjectInputStream reader;
+    private ObjectOutputStream writer;
+
+    private void initializeNetworking(String serverIp) throws IOException, ClassNotFoundException
+    {
+        final int port = 1234;
+        socket = new Socket(serverIp, port);
+        reader = new ObjectInputStream(socket.getInputStream());
+        writer = new ObjectOutputStream(socket.getOutputStream());
+        MessageHolder initialMessage = (MessageHolder) reader.readObject();
+        uuid = UUID.fromString(initialMessage.getUuid());
+    }
+
     public UUID getUuid()
     {
-        return this.dataSharer.getUuid();
+        return this.uuid;
     }
 
     public boolean openConnection(String serverIp)
@@ -41,7 +60,8 @@ public class DataSharerFacadeTcp implements StateChangeObserver
             return false;
         try
         {
-            dataSharer = new DataSharerTcp(textArea, serverIp);
+            initializeNetworking(serverIp);
+            dataSharer = new DataSharerTcp(uuid, textArea, reader, writer);
             return true;
         }
         catch (ConnectException | UnknownHostException e)
@@ -101,4 +121,17 @@ public class DataSharerFacadeTcp implements StateChangeObserver
         textEditor.disconnect();
     }
 
+    // Remember to use nexted if to check for condition on the server side.
+    // ============== SERVER SYNCHRONIZE ==============
+//    public boolean permissionToWrite()
+//    {
+//        final MessageHolder msgHolder = new MessageHolder(
+//                getUuid(),
+//
+//        );
+//        writer.writeObject(msgHolder);
+//        writer.flush();
+//        return false;
+//    }
+    // !============== SERVER SYNCHRONIZE ==============
 }

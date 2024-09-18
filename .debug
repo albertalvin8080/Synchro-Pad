@@ -1,0 +1,17 @@
+WINDOWS (1st to insert):
+java -jar text-editor-1.0.0.jar
+5573c89d-6cdd-49f0-8633-ee86b28f05cc
+OLD CARET:   2
+Offset:      0
+Length:      0
+Text:        0
+Text length: 1
+
+LINUX (2nd to insert):
+java -jar text-editor-1.0.0.jar
+?[UUID] (not important in this case)
+OLD CARET:   1
+Offset:      1
+Length:      0
+Text:        0
+Text length: 1
