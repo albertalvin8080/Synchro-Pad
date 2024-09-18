@@ -21,6 +21,20 @@
     </properties>
 
     <dependencies>
-
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>debug</id>
+            <properties>
+                <debug>true</debug>
+            </properties>
+        </profile>
+        <profile>
+            <id>production</id>
+            <properties>
+                <debug>false</debug>
+            </properties>
+        </profile>
+    </profiles>
 </project>

@@ -25,7 +25,26 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <!--
+                Enabled property filtering in src/main/resources: This ensures that config.properties
+                will have the debug value replaced with true or false based on your Maven profile.
+                -->
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
             <!-- Maven Shade Plugin for creating a fat/uber jar -->
             <!-- mvn clean package -->
             <!-- java -jar target/text-editor-server-0.0.7.jar -->
@@ -40,12 +59,13 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-<!--                            Original jar -->
-                            <outputDirectory>../fat-jar</outputDirectory>
-<!--                            Fat jar (needs the name of the jar) -->
-<!--                            <outputFile>../fat-jar/server-text-editor-${project.version}.jar</outputFile>-->
+                            <!--                            Original jar -->
+                            <!--                            <outputDirectory>../fat-jar</outputDirectory>-->
+                            <!--                            Fat jar (needs the name of the jar) -->
+                            <outputFile>../fat-jar/${project.name}-${project.version}.jar</outputFile>
                             <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>org.albert.ServerMain</mainClass>
                                 </transformer>
                             </transformers>

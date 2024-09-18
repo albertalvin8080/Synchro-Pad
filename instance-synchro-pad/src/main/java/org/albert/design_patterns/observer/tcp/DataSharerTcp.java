@@ -1,5 +1,7 @@
 package org.albert.design_patterns.observer.tcp;
 
+import org.albert.CompilerProperties;
+import org.albert.InstanceMain;
 import org.albert.design_patterns.observer.DataSharer;
 import org.albert.util.MessageHolder;
 
@@ -72,11 +74,14 @@ public class DataSharerTcp implements DataSharer
                         textArea.setText(sb.toString());
                         textArea.setCaretPosition(oldCaretPos);
 
-                        System.out.println("OLD CARET:   " + oldCaretPos);
-                        System.out.println("Offset:      " + offset);
-                        System.out.println("Length:      " + length);
-                        System.out.println("Text:        " + text);
-                        System.out.println("Text length: " + text.length());
+                        if (CompilerProperties.DEBUG)
+                        {
+                            System.out.println("OLD CARET:   " + oldCaretPos);
+                            System.out.println("Offset:      " + offset);
+                            System.out.println("Length:      " + length);
+                            System.out.println("Text:        " + text);
+                            System.out.println("Text length: " + text.length());
+                        }
                     }
                 }
                 catch (IllegalArgumentException e) // Invalid caret position
@@ -86,6 +91,7 @@ public class DataSharerTcp implements DataSharer
                 catch (SocketException e) // Socket closed
                 {
                     System.out.println(e);
+                    running = false;
                 }
                 catch (EOFException e)
                 {

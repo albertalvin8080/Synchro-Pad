@@ -1,5 +1,6 @@
 package org.albert.design_patterns.observer.tcp;
 
+import org.albert.CompilerProperties;
 import org.albert.component.SynchroPad;
 import org.albert.design_patterns.observer.StateChangeObserver;
 import org.albert.util.MessageHolder;
@@ -9,6 +10,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ConnectException;
+import java.net.NoRouteToHostException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.UUID;
@@ -64,11 +66,14 @@ public class DataSharerFacadeTcp implements StateChangeObserver
             dataSharer = new DataSharerTcp(uuid, textArea, reader, writer);
             return true;
         }
-        catch (ConnectException | UnknownHostException e)
+        // Expected exceptions
+        catch (ConnectException | UnknownHostException | NoRouteToHostException e)
         {
-            // Connection Refused / UnknownHostException
-            System.out.println(e);
+            // Connection Refused / UnknownHostException / NoNoRouteToHostException
+            if (CompilerProperties.DEBUG)
+                e.printStackTrace();
         }
+        // Unexpected exceptions
         catch (Exception e)
         {
             e.printStackTrace();

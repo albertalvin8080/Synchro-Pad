@@ -1,5 +1,7 @@
 package org.albert.design_patterns.observer;
 
+import org.albert.CompilerProperties;
+import org.albert.InstanceMain;
 import org.albert.design_patterns.observer.tcp.DataSharerFacadeTcp;
 import org.albert.util.OperationType;
 
@@ -57,6 +59,8 @@ public class DataSharerDocumentFilter extends DocumentFilter
     {
         // Only the AWT-EventQueue-0 thread handles user input.
         // Any other thread is just receiving data from the server.
+        if(CompilerProperties.DEBUG)
+            System.out.println("DocumentFilter Thread -> " + Thread.currentThread().getName());
         if (!Thread.currentThread().getName().equals("AWT-EventQueue-0")) return;
 
         shareData(offset, length, text, operationType);

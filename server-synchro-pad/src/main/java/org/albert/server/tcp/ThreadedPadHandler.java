@@ -1,5 +1,6 @@
 package org.albert.server.tcp;
 
+import org.albert.CompilerProperties;
 import org.albert.server.DataSharer;
 import org.albert.util.MessageHolder;
 
@@ -40,7 +41,7 @@ public class ThreadedPadHandler extends Thread
         MessageHolder initialMessage = new MessageHolder(uuid.toString(), (short) 0, 0, 0, "");
         out.writeObject(initialMessage);
         out.flush();
-        // debug
+//        if (CompilerProperties.DEBUG)
         System.out.println("Init -> " + initialMessage.getUuid());
     }
 
@@ -59,21 +60,21 @@ public class ThreadedPadHandler extends Thread
                 String text = msgHolder.getText();
                 text = text == null ? "" : text;
 
-                // debug
-                System.out.println("Received: " + text.replaceAll("\n", " \\\\{nl} "));
+                if (CompilerProperties.DEBUG)
+                    System.out.println("Received: " + text.replaceAll("\n", " \\\\{nl} "));
 
                 if (operationType == DataSharer.OP_INSERT ||
                         operationType == DataSharer.OP_DELETE)
                 {
-                    // debug
-                    System.out.println("INSERT | DELETE -> " + this.uuid);
+                    if (CompilerProperties.DEBUG)
+                        System.out.println("INSERT | DELETE -> " + this.uuid);
                     sb.replace(offset, offset + length, text);
                     globalTextHandler.execute(this, msgHolder);
                 }
                 else if (operationType == DataSharer.OP_INIT_GLOBAL)
                 {
-                    // debug
-                    System.out.println("SUBSCRIBE -> " + this.uuid);
+                    if (CompilerProperties.DEBUG)
+                        System.out.println("SUBSCRIBE -> " + this.uuid);
                     globalTextHandler.subscribe(this);
                     MessageHolder initialMessage = new MessageHolder("", (short) 0, 0, 0, sb.toString());
                     out.writeObject(initialMessage);
@@ -86,7 +87,7 @@ public class ThreadedPadHandler extends Thread
         {
             globalTextHandler.unsubscribe(this);
             allThreads.remove(this);
-            // debug
+//            if (CompilerProperties.DEBUG)
             System.out.println("Disconnected -> " + uuid);
         }
         catch (Exception e)
@@ -98,5 +99,10 @@ public class ThreadedPadHandler extends Thread
     public ObjectOutputStream getOut()
     {
         return out;
+    }
+
+    public UUID getUuid()
+    {
+        return uuid;
     }
 }

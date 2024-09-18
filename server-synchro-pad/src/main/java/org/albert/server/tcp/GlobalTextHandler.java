@@ -1,5 +1,6 @@
 package org.albert.server.tcp;
 
+import org.albert.CompilerProperties;
 import org.albert.util.MessageHolder;
 
 import java.io.ObjectOutputStream;
@@ -37,6 +38,8 @@ public class GlobalTextHandler
                 final ObjectOutputStream newOut = threadedEchoHandler.getOut();
                 newOut.writeObject(msgHolder);
                 newOut.flush();
+                if (CompilerProperties.DEBUG)
+                    System.out.println("GLOBAL TEXT SENT -> " + threadedEchoHandler.getUuid());
             }
             catch (SocketException e)
             {

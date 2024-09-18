@@ -23,7 +23,7 @@ public class ConnectingDialog extends JDialog
 //            }
 //        });
 
-        final URL loadingImg = ClassLoader.getSystemResource("loading.png");
+        final URL loadingImg = ClassLoader.getSystemResource("img/loading.png");
         final Image scaledInstance = new ImageIcon(loadingImg.getPath()).getImage()
                 .getScaledInstance(30, 30, Image.SCALE_SMOOTH);
         JLabel message = new JLabel(new ImageIcon(scaledInstance), JLabel.CENTER);
