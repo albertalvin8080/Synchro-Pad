@@ -30,23 +30,22 @@ public class GlobalTextHandler
     {
         for (var threadedEchoHandler : globalTextThreads)
         {
-            if (threadedEchoHandler != source)
+            if (threadedEchoHandler == source) continue;
+
+            try
             {
-                try
-                {
-                    final ObjectOutputStream newOut = threadedEchoHandler.getOut();
-                    newOut.writeObject(msgHolder);
-                    newOut.flush();
-                }
-                catch (SocketException e)
-                {
-                    // Removing threadedEchoHandler if the socket has been closed.
-                    globalTextThreads.remove(threadedEchoHandler);
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
+                final ObjectOutputStream newOut = threadedEchoHandler.getOut();
+                newOut.writeObject(msgHolder);
+                newOut.flush();
+            }
+            catch (SocketException e)
+            {
+                // Removing threadedEchoHandler if the socket has been closed.
+                globalTextThreads.remove(threadedEchoHandler);
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
             }
         }
     }

@@ -234,10 +234,8 @@ public class SynchroPad extends JFrame
         tcpMenu = new JMenu("TCP");
         connectMenuItem = new JMenuItem("Connect");
         connectMenuItem.addActionListener(e -> {
-            CustomIpInputPanel ipPanel = new CustomIpInputPanel();
-            int result = JOptionPane.showConfirmDialog(
-                    this, ipPanel, "Enter IP Address", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE
-            );
+            CustomIpInputDialog ipPanel = new CustomIpInputDialog(this);
+            final int result = ipPanel.getOption();
 
             // Case for user cancel
             if (result != JOptionPane.OK_OPTION) return;
@@ -381,10 +379,10 @@ public class SynchroPad extends JFrame
     private final SynchroPad superSynchroPad = this;
     private class OpenConnectionSwingWorker extends SwingWorker<Boolean, Void>
     {
-        private final CustomIpInputPanel ipPanel;
+        private final CustomIpInputDialog ipPanel;
         private final ConnectingDialog connectingDialog;
 
-        private OpenConnectionSwingWorker(CustomIpInputPanel ipPanel)
+        private OpenConnectionSwingWorker(CustomIpInputDialog ipPanel)
         {
             this.ipPanel = ipPanel;
             this.connectingDialog = new ConnectingDialog(superSynchroPad, this);

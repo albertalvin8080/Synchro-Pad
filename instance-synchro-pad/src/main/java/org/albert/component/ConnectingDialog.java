@@ -2,6 +2,7 @@ package org.albert.component;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.URL;
 
 public class ConnectingDialog extends JDialog
 {
@@ -10,7 +11,7 @@ public class ConnectingDialog extends JDialog
     public ConnectingDialog(SynchroPad synchroPad, SwingWorker<Boolean, Void> worker)
     {
         // ModalityType.MODELESS makes this dialog nonblocking.
-        super(synchroPad, "", ModalityType.MODELESS);
+        super(synchroPad, "Connecting", ModalityType.MODELESS);
         this.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE); // Prevent closing
 //        this.setTitle("Connecting"); // Already set
 
@@ -22,7 +23,10 @@ public class ConnectingDialog extends JDialog
 //            }
 //        });
 
-        JLabel message = new JLabel("Connecting...", JLabel.CENTER);
+        final URL loadingImg = ClassLoader.getSystemResource("loading.png");
+        final Image scaledInstance = new ImageIcon(loadingImg.getPath()).getImage()
+                .getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+        JLabel message = new JLabel(new ImageIcon(scaledInstance), JLabel.CENTER);
         this.add(message, BorderLayout.CENTER);
 
         final JPanel panel = new JPanel();
