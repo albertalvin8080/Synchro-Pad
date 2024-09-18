@@ -1,7 +1,11 @@
 package org.albert.component;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 
 public class FontFormatDialog extends JDialog
@@ -32,12 +36,24 @@ public class FontFormatDialog extends JDialog
         int colorButtonWidth = 25;
         int colorButtonHeight = 25;
         colorButton.setPreferredSize(new Dimension(colorButtonWidth, colorButtonHeight));
-        final URL colorsImg = ClassLoader.getSystemResource("img/colors.png");
-        final Image scaledInstance = new ImageIcon(colorsImg.getPath()).getImage().getScaledInstance(colorButtonWidth, colorButtonHeight, Image.SCALE_SMOOTH);
-        colorButton.setIcon(new ImageIcon(scaledInstance));
         colorButton.addActionListener(e -> {
             newColor = JColorChooser.showDialog(this, "Choose a color", Color.BLACK);
         });
+        try (InputStream imgStream = ClassLoader.getSystemResourceAsStream("img/colors.png"))
+        {
+            if (imgStream != null)
+            {
+                // Read the image from the input stream
+                final BufferedImage img = ImageIO.read(imgStream);
+                final Image scaledInstance = img.getScaledInstance(colorButtonWidth, colorButtonHeight, Image.SCALE_SMOOTH);
+                colorButton.setIcon(new ImageIcon(scaledInstance));
+            }
+            else System.err.println("Image not found: img/colors.png");
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
 
         confirmButton = new JButton("Confirm");
         confirmButton.addActionListener(e -> {

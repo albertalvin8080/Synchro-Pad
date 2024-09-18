@@ -99,9 +99,12 @@ public class DataSharerTcp implements DataSharer
                     System.out.println(e);
                     destroy();
                 }
-                catch (IOException | ClassNotFoundException e)
+                catch (Exception e)
                 {
-                    throw new RuntimeException(e);
+                    if (CompilerProperties.DEBUG)
+                        throw new RuntimeException(e);
+                    else
+                        e.printStackTrace();
                 }
             }
         });

@@ -15,6 +15,9 @@ public interface DataSharer extends StateChangeObserver
 
     // TCP only
     public static final short OP_INIT_GLOBAL = 15;
+    public static final short OP_REQUEST_GLOBAL_WRITE = 16;
+    public static final short OP_DENIED_GLOBAL_WRITE = 17;
+    public static final short OP_ACCEPTED_GLOBAL_WRITE = 18;
 
     void destroy();
 }

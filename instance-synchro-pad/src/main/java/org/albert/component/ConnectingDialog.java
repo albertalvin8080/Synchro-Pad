@@ -1,13 +1,15 @@
 package org.albert.component;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 
 public class ConnectingDialog extends JDialog
 {
-    private final JButton cancelBtn;
-
     public ConnectingDialog(SynchroPad synchroPad, SwingWorker<Boolean, Void> worker)
     {
         // ModalityType.MODELESS makes this dialog nonblocking.
@@ -23,15 +25,27 @@ public class ConnectingDialog extends JDialog
 //            }
 //        });
 
-        final URL loadingImg = ClassLoader.getSystemResource("img/loading.png");
-        final Image scaledInstance = new ImageIcon(loadingImg.getPath()).getImage()
-                .getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+        Image scaledInstance = null;
+        try (InputStream imgStream = ClassLoader.getSystemResourceAsStream("img/loading.png"))
+        {
+            if (imgStream != null)
+            {
+                final BufferedImage img = ImageIO.read(imgStream);
+                scaledInstance = img.getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+            }
+            else System.err.println("Image not found: img/loading.png");
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
         JLabel message = new JLabel(new ImageIcon(scaledInstance), JLabel.CENTER);
         this.add(message, BorderLayout.CENTER);
 
         final JPanel panel = new JPanel();
 
-        cancelBtn = new JButton("Cancel");
+        JButton cancelBtn = new JButton("Cancel");
         cancelBtn.setPreferredSize(new Dimension(90, 30));
         cancelBtn.addActionListener(e -> {
             worker.cancel(true); // true allows interrupting the worker if necessary

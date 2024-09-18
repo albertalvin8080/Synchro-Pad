@@ -76,7 +76,19 @@ public class ThreadedPadHandler extends Thread
                     if (CompilerProperties.DEBUG)
                         System.out.println("SUBSCRIBE -> " + this.uuid);
                     globalTextHandler.subscribe(this);
-                    MessageHolder initialMessage = new MessageHolder("", (short) 0, 0, 0, sb.toString());
+                    MessageHolder initialMessage = new MessageHolder(
+                            "", (short) 0, 0, 0, sb.toString()
+                    );
+                    out.writeObject(initialMessage);
+                    out.flush();
+                }
+                else if (operationType == DataSharer.OP_REQUEST_GLOBAL_WRITE)
+                {
+                    if (CompilerProperties.DEBUG)
+                        System.out.println("REQUEST GLOBAL WRITE -> " + this.uuid);
+                    MessageHolder initialMessage = new MessageHolder(
+                            "", DataSharer.OP_ACCEPTED_GLOBAL_WRITE, 0, 0, null
+                    );
                     out.writeObject(initialMessage);
                     out.flush();
                 }

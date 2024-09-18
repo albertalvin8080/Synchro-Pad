@@ -29,6 +29,9 @@ public class DataSharerDocumentFilter extends DocumentFilter
 //        System.out.println("length: " + length);
 //        System.out.println("text: " + text);
 
+        final boolean permission = dataSharerFacadeTcp.requestWritePermission();
+        if(!permission) return;
+
         if (text.isEmpty())
         {
             super.replace(fb, offset, length, text, attrs);
@@ -49,6 +52,9 @@ public class DataSharerDocumentFilter extends DocumentFilter
 //        System.out.println("offset: " + offset);
 //        System.out.println("length: " + length);
 
+        final boolean permission = dataSharerFacadeTcp.requestWritePermission();
+        if(!permission) return;
+
         performStateChange(offset, length, null, OperationType.DELETE);
 //        System.out.println("DELETED");
 
@@ -57,10 +63,10 @@ public class DataSharerDocumentFilter extends DocumentFilter
 
     private void performStateChange(int offset, int length, String text, OperationType operationType)
     {
+        if (CompilerProperties.DEBUG)
+            System.out.println("DocumentFilter Thread -> " + Thread.currentThread().getName());
         // Only the AWT-EventQueue-0 thread handles user input.
         // Any other thread is just receiving data from the server.
-        if(CompilerProperties.DEBUG)
-            System.out.println("DocumentFilter Thread -> " + Thread.currentThread().getName());
         if (!Thread.currentThread().getName().equals("AWT-EventQueue-0")) return;
 
         shareData(offset, length, text, operationType);
@@ -68,9 +74,7 @@ public class DataSharerDocumentFilter extends DocumentFilter
 
     private void shareData(int offset, int length, String text, OperationType operationType)
     {
-        if (operationType == OperationType.INSERT)
-            dataSharerFacadeTcp.onInsert(offset, length, text);
-        else if (operationType == OperationType.DELETE)
-            dataSharerFacadeTcp.onDelete(offset, length, text);
+        if (operationType == OperationType.INSERT) dataSharerFacadeTcp.onInsert(offset, length, text);
+        else if (operationType == OperationType.DELETE) dataSharerFacadeTcp.onDelete(offset, length, text);
     }
 }

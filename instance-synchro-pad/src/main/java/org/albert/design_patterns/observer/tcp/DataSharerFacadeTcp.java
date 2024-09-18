@@ -2,6 +2,7 @@ package org.albert.design_patterns.observer.tcp;
 
 import org.albert.CompilerProperties;
 import org.albert.component.SynchroPad;
+import org.albert.design_patterns.observer.DataSharer;
 import org.albert.design_patterns.observer.StateChangeObserver;
 import org.albert.util.MessageHolder;
 
@@ -128,15 +129,34 @@ public class DataSharerFacadeTcp implements StateChangeObserver
 
     // Remember to use nexted if to check for condition on the server side.
     // ============== SERVER SYNCHRONIZE ==============
-//    public boolean permissionToWrite()
-//    {
-//        final MessageHolder msgHolder = new MessageHolder(
-//                getUuid(),
-//
-//        );
-//        writer.writeObject(msgHolder);
-//        writer.flush();
+    public boolean requestWritePermission()
+    {
+        final MessageHolder msgHolder = new MessageHolder(
+                uuid.toString(),
+                DataSharer.OP_REQUEST_GLOBAL_WRITE,
+                0,
+                0,
+                null
+        );
+        try
+        {
+            writer.writeObject(msgHolder);
+            writer.flush();
+            while (true)
+            {
+                final MessageHolder response = (MessageHolder) reader.readObject();
+
+                if(response.getOperationType() == DataSharer.OP_ACCEPTED_GLOBAL_WRITE)
+                    return true;
+                else if(response.getOperationType() == DataSharer.OP_DENIED_GLOBAL_WRITE)
+                    return false;
+            }
+        }
+        catch (IOException | ClassNotFoundException e)
+        {
+            throw new RuntimeException(e);
+        }
 //        return false;
-//    }
+    }
     // !============== SERVER SYNCHRONIZE ==============
 }
