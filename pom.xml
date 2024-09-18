@@ -3,15 +3,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.albert</groupId>
-    <artifactId>Swing-Text-Editor</artifactId>
+    <artifactId>Synchro-Pad</artifactId>
     <version>0.0.1</version>
     <packaging>pom</packaging>
 
-    <name>Swing-Text-Editor</name>
+    <name>Synchro-Pad</name>
     <url>http://maven.apache.org</url>
     <modules>
-        <module>text-editor</module>
-        <module>text-editor-server</module>
+        <module>instance-synchro-pad</module>
+        <module>server-synchro-pad</module>
     </modules>
 
     <properties>
