@@ -1,21 +1,18 @@
 package org.albert.design_patterns.observer.tcp;
 
 import org.albert.CompilerProperties;
-import org.albert.InstanceMain;
 import org.albert.design_patterns.observer.DataSharer;
 import org.albert.util.MessageHolder;
 
 import javax.swing.*;
 import java.io.*;
-import java.lang.ref.Cleaner;
-import java.net.Socket;
 import java.net.SocketException;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DataSharerTcp implements DataSharer
 {
-    private final AtomicBoolean writePermission = new AtomicBoolean();
+    private volatile boolean mayWrite;
     private final Object writeMonitor = new Object(); // Monitor object for synchronization
     private final UUID uuid;
     private final JTextArea textArea;
@@ -68,17 +65,29 @@ public class DataSharerTcp implements DataSharer
                     }
                     else if (operationType == DataSharer.OP_DENIED_GLOBAL_WRITE)
                     {
+                        if(CompilerProperties.DEBUG)
+                            System.out.println("Write permission: DENIED");
                         synchronized (writeMonitor)
                         {
-                            writePermission.set(false);
+                            MessageHolder responseMessage = new MessageHolder(
+                                    null, DataSharer.OP_CLIENT_CONFIRMATION_GLOBAL_WRITE, 0, 0, null
+                            );
+                            writer.writeObject(responseMessage);
+                            mayWrite = false;
                             writeMonitor.notifyAll();
                         }
                     }
                     else if (operationType == DataSharer.OP_ACCEPTED_GLOBAL_WRITE)
                     {
+                        if(CompilerProperties.DEBUG)
+                            System.out.println("Write permission: ACCEPTED");
                         synchronized (writeMonitor)
                         {
-                            writePermission.set(true);
+                            MessageHolder responseMessage = new MessageHolder(
+                                    null, DataSharer.OP_CLIENT_CONFIRMATION_GLOBAL_WRITE, 0, 0, null
+                            );
+                            writer.writeObject(responseMessage);
+                            mayWrite = true;
                             writeMonitor.notifyAll();
                         }
                     }
@@ -168,16 +177,17 @@ public class DataSharerTcp implements DataSharer
         );
         try
         {
-            writer.writeObject(msgHolder);
-            writer.flush();
-
+            if(CompilerProperties.DEBUG)
+                System.out.println("WAITING FOR WRITE PERMISSION");
             // Wait for permission (block the current thread)
             synchronized (writeMonitor)
             {
+                writer.writeObject(msgHolder);
+                writer.flush();
                 writeMonitor.wait();
             }
 
-            return writePermission.get();
+            return mayWrite;
         }
         catch (IOException | InterruptedException e)
         {

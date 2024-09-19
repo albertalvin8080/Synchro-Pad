@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.*;
 
 public class ThreadedPadHandler extends Thread
 {
@@ -92,22 +93,34 @@ public class ThreadedPadHandler extends Thread
                         else
                             response = DataSharer.OP_DENIED_GLOBAL_WRITE;
 
-                        MessageHolder responseMessage = new MessageHolder(
-                                null, response, 0, 0, null
-                        );
+                        while (true)
+                        {
+                            if (CompilerProperties.DEBUG)
+                                System.out.println("SENDING RESPONSE...");
+
+                            MessageHolder responseMessage = new MessageHolder(
+                                    null, response, 0, 0, null
+                            );
+                            out.writeObject(responseMessage);
+                            out.flush();
+
+                            if(in.available() <= 0) continue; // UNRELIABLE FOR ObjectInputStream
+                            MessageHolder confirmation = (MessageHolder) in.readObject();
+//                            MessageHolder confirmation = readWithTimeout(in, 100, TimeUnit.MILLISECONDS);
+                            if (confirmation.getOperationType() == DataSharer.OP_CLIENT_CONFIRMATION_GLOBAL_WRITE)
+                                break;
+                        }
 
                         if (CompilerProperties.DEBUG)
                         {
-                            System.out.println("REQUEST GLOBAL WRITE -> " + this.uuid);
+                            System.out.println("REQUEST GLOBAL WRITE (after loop) -> " + this.uuid);
                             System.out.println(response == DataSharer.OP_ACCEPTED_GLOBAL_WRITE ? "Accepted" : "Denied");
                         }
-                        out.writeObject(responseMessage);
-                        out.flush();
                         break;
 
                     default:
                         if (CompilerProperties.DEBUG)
-                            System.out.println("Unknown operation type -> " + this.uuid);
+                            System.out.println("Unknown operation type: " + operationType + " -> " + this.uuid);
                         break;
                 }
 
@@ -136,4 +149,5 @@ public class ThreadedPadHandler extends Thread
     {
         return uuid;
     }
+
 }

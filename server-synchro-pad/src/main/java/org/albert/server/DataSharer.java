@@ -18,6 +18,7 @@ public interface DataSharer
     public static final short OP_REQUEST_GLOBAL_WRITE = 16;
     public static final short OP_DENIED_GLOBAL_WRITE = 17;
     public static final short OP_ACCEPTED_GLOBAL_WRITE = 18;
+    public static final short OP_CLIENT_CONFIRMATION_GLOBAL_WRITE = 19;
 
     void destroy();
 }

@@ -39,9 +39,6 @@ public class DataSharerDocumentFilter extends DocumentFilter
         {
             final boolean permission = dataSharerFacadeTcp.requestWritePermission();
             if (!permission) return;
-        }
-        else
-        {
             performStateChange(offset, length, text, OperationType.INSERT);
         }
 
@@ -60,9 +57,6 @@ public class DataSharerDocumentFilter extends DocumentFilter
         {
             final boolean permission = dataSharerFacadeTcp.requestWritePermission();
             if (!permission) return;
-        }
-        else
-        {
             performStateChange(offset, length, null, OperationType.INSERT);
         }
 

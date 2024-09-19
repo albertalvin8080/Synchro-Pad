@@ -31,6 +31,12 @@
             </properties>
         </profile>
         <profile>
+            <id>prod</id>
+            <properties>
+                <debug>false</debug>
+            </properties>
+        </profile>
+        <profile>
             <id>production</id>
             <properties>
                 <debug>false</debug>
