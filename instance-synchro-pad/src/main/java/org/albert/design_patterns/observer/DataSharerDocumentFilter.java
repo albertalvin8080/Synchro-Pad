@@ -11,9 +11,14 @@ import javax.swing.text.DocumentFilter;
 import java.io.EOFException;
 import java.net.SocketException;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
 public class DataSharerDocumentFilter extends DocumentFilter
 {
     private final DataSharerFacadeTcp dataSharerFacadeTcp;
+    private volatile boolean awaitingPermission = false;
+    private final Queue<Runnable> pendingOperations = new LinkedList<>(); // To store pending operations
 
     public DataSharerDocumentFilter(DataSharerFacadeTcp dataSharerFacadeTcp)
     {
@@ -23,12 +28,6 @@ public class DataSharerDocumentFilter extends DocumentFilter
     @Override
     public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException
     {
-//        System.out.println("--------------------------");
-//        System.out.println("REPLACE");
-//        System.out.println("offset: " + offset);
-//        System.out.println("length: " + length);
-//        System.out.println("text: " + text);
-
         if (text.isEmpty())
         {
             super.replace(fb, offset, length, text, attrs);
@@ -37,40 +36,101 @@ public class DataSharerDocumentFilter extends DocumentFilter
 
         if (Thread.currentThread().getName().equals("AWT-EventQueue-0"))
         {
-            final boolean permission = dataSharerFacadeTcp.requestWritePermission();
-            if (!permission) return;
-            performStateChange(offset, length, text, OperationType.INSERT);
-        }
+            if (awaitingPermission)
+            {
+                // Buffer the operation until permission is granted
+                pendingOperations.add(() -> {
+                    performStateChange(offset, length, text, OperationType.INSERT);
+                    try
+                    {
+                        super.replace(fb, offset, length, text, attrs);
+                    }
+                    catch (BadLocationException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                });
+                return;
+            }
 
-        super.replace(fb, offset, length, text, attrs);
+            awaitingPermission = true;
+            dataSharerFacadeTcp.requestWritePermissionAsync((granted) -> {
+                awaitingPermission = false;
+                if (granted)
+                {
+                    try
+                    {
+                        super.replace(fb, offset, length, text, attrs);
+                    }
+                    catch (BadLocationException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                    performStateChange(offset, length, text, OperationType.INSERT);
+                    // Process any pending operations
+                    processPendingOperations();
+                }
+            });
+        }
+        else
+        {
+            super.replace(fb, offset, length, text, attrs);
+        }
     }
 
     @Override
     public void remove(FilterBypass fb, int offset, int length) throws BadLocationException
     {
-//        System.out.println("--------------------------");
-//        System.out.println("REMOVE");
-//        System.out.println("offset: " + offset);
-//        System.out.println("length: " + length);
-
         if (Thread.currentThread().getName().equals("AWT-EventQueue-0"))
         {
-            final boolean permission = dataSharerFacadeTcp.requestWritePermission();
-            if (!permission) return;
-            performStateChange(offset, length, null, OperationType.INSERT);
+            if (awaitingPermission)
+            {
+                // Buffer the operation until permission is granted
+                pendingOperations.add(() -> {
+                    try
+                    {
+                        super.remove(fb, offset, length);
+                    }
+                    catch (BadLocationException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                    performStateChange(offset, length, null, OperationType.DELETE);
+                });
+                return;
+            }
+
+            awaitingPermission = true;
+            dataSharerFacadeTcp.requestWritePermissionAsync((granted) -> {
+                awaitingPermission = false;
+                if (granted)
+                {
+                    try
+                    {
+                        super.remove(fb, offset, length);
+                    }
+                    catch (BadLocationException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                    performStateChange(offset, length, null, OperationType.DELETE);
+                    // Process any pending operations
+                    processPendingOperations();
+                }
+            });
+        }
+        else
+        {
+            super.remove(fb, offset, length);
         }
 
-        super.remove(fb, offset, length);
     }
 
     private void performStateChange(int offset, int length, String text, OperationType operationType)
     {
-        // Only the AWT-EventQueue-0 thread handles user input.
-        // Any other thread is just receiving data from the server.
         if (CompilerProperties.DEBUG)
             System.out.println("DocumentFilter Thread -> " + Thread.currentThread().getName());
 
-        // In case you want to implement undo/redo afterward
         shareData(offset, length, text, operationType);
     }
 
@@ -78,5 +138,13 @@ public class DataSharerDocumentFilter extends DocumentFilter
     {
         if (operationType == OperationType.INSERT) dataSharerFacadeTcp.onInsert(offset, length, text);
         else if (operationType == OperationType.DELETE) dataSharerFacadeTcp.onDelete(offset, length, text);
+    }
+
+    private void processPendingOperations()
+    {
+        while (!pendingOperations.isEmpty())
+        {
+            pendingOperations.poll().run();
+        }
     }
 }

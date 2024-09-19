@@ -15,6 +15,7 @@ import java.net.NoRouteToHostException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public class DataSharerFacadeTcp implements StateChangeObserver
 {
@@ -64,7 +65,7 @@ public class DataSharerFacadeTcp implements StateChangeObserver
         try
         {
             initializeNetworking(serverIp);
-            dataSharer = new DataSharerTcp(uuid, textArea, reader, writer);
+            dataSharer = new DataSharerTcp(socket, uuid, textArea, reader, writer);
             return true;
         }
         // Expected exceptions
@@ -129,9 +130,9 @@ public class DataSharerFacadeTcp implements StateChangeObserver
 
     // DON'T WORRY ABOUT IT: ~Remember to use nexted if to check for condition on the server side.~
     // ============== SERVER SYNCHRONIZE ==============
-    public boolean requestWritePermission()
+    public void requestWritePermissionAsync(Consumer<Boolean> callback)
     {
-        return dataSharer.requestWritePermission();
+        dataSharer.requestWritePermissionAsync(callback);
     }
     // !============== SERVER SYNCHRONIZE ==============
 }

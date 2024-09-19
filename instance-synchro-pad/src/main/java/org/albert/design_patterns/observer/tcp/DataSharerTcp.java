@@ -6,13 +6,17 @@ import org.albert.util.MessageHolder;
 
 import javax.swing.*;
 import java.io.*;
+import java.net.Socket;
 import java.net.SocketException;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public class DataSharerTcp implements DataSharer
 {
     private volatile boolean mayWrite;
     private final Object writeMonitor = new Object(); // Monitor object for synchronization
+
+    private final Socket socket;
     private final UUID uuid;
     private final JTextArea textArea;
     private volatile boolean running;
@@ -20,8 +24,9 @@ public class DataSharerTcp implements DataSharer
     private final ObjectInputStream reader;
     private final ObjectOutputStream writer;
 
-    public DataSharerTcp(UUID uuid, JTextArea textArea, ObjectInputStream reader, ObjectOutputStream writer) throws IOException, ClassNotFoundException
+    public DataSharerTcp(Socket socket, UUID uuid, JTextArea textArea, ObjectInputStream reader, ObjectOutputStream writer) throws IOException, ClassNotFoundException
     {
+        this.socket = socket;
         this.uuid = uuid;
         this.textArea = textArea;
         this.reader = reader;
@@ -54,8 +59,13 @@ public class DataSharerTcp implements DataSharer
             {
                 try
                 {
+                    if (CompilerProperties.DEBUG)
+                        System.out.println("CreateAsyncThread waiting for server");
                     MessageHolder msgHolder = (MessageHolder) reader.readObject();
+
                     short operationType = msgHolder.getOperationType();
+                    if (CompilerProperties.DEBUG)
+                        System.out.println("CreateAsyncThread received operationType: " + operationType);
 
                     if (operationType == DataSharer.OP_INSERT ||
                             operationType == DataSharer.OP_DELETE)
@@ -174,7 +184,7 @@ public class DataSharerTcp implements DataSharer
     }
 
     // ============== SERVER SYNCHRONIZE ==============
-    public boolean requestWritePermission()
+    public void requestWritePermissionAsync(Consumer<Boolean> callback)
     {
         final MessageHolder msgHolder = new MessageHolder(
                 uuid.toString(),
@@ -186,21 +196,62 @@ public class DataSharerTcp implements DataSharer
         try
         {
             if (CompilerProperties.DEBUG)
-                System.out.println("WAITING FOR WRITE PERMISSION");
+                System.out.println("REQUESTING WRITE PERMISSION");
 
-            synchronized (writeMonitor)
-            {
-                writer.writeObject(msgHolder);
-                writer.flush();
-                writeMonitor.wait();
-            }
 
-            return mayWrite;
+            writer.writeObject(msgHolder);
+            writer.flush();
+
+            // Notify the callback when the response arrives
+            new Thread(() -> {
+                try
+                {
+                    synchronized (writeMonitor)
+                    {
+                        writeMonitor.wait();
+                    }
+                    callback.accept(mayWrite);
+                }
+                catch (InterruptedException e)
+                {
+                    Thread.currentThread().interrupt();
+                    callback.accept(false); // Assume permission denied if interrupted
+                }
+            }).start();
         }
-        catch (IOException | InterruptedException e)
+        catch (IOException e)
         {
             throw new RuntimeException(e);
         }
     }
+//    public boolean requestWritePermission()
+//    {
+//        final MessageHolder msgHolder = new MessageHolder(
+//                uuid.toString(),
+//                DataSharer.OP_REQUEST_GLOBAL_WRITE,
+//                0,
+//                0,
+//                null
+//        );
+//        try
+//        {
+//            if (CompilerProperties.DEBUG)
+//                System.out.println("WAITING FOR WRITE PERMISSION");
+//
+//            synchronized (writeMonitor)
+//            {
+//                writer.writeObject(msgHolder);
+//                writer.flush();
+//                Thread.sleep(100);
+//                writeMonitor.wait();
+//            }
+//
+//            return mayWrite;
+//        }
+//        catch (IOException | InterruptedException e)
+//        {
+//            throw new RuntimeException(e);
+//        }
+//    }
     // !============== SERVER SYNCHRONIZE ==============
 }

@@ -105,10 +105,10 @@ public class ThreadedPadHandlerTcp extends Thread
                             MessageHolder responseMessage = new MessageHolder(
                                     null, response, 0, 0, null
                             );
-                            out.writeObject(responseMessage);
-                            out.flush();
 
                             Thread.sleep(100);
+                            out.writeObject(responseMessage);
+                            out.flush();
 
                             MessageHolder confirmation = (MessageHolder) in.readObject();
                             if (confirmation.getOperationType() == DataSharer.OP_CLIENT_CONFIRMATION_GLOBAL_WRITE)
