@@ -29,17 +29,21 @@ public class DataSharerDocumentFilter extends DocumentFilter
 //        System.out.println("length: " + length);
 //        System.out.println("text: " + text);
 
-        final boolean permission = dataSharerFacadeTcp.requestWritePermission();
-        if(!permission) return;
-
         if (text.isEmpty())
         {
             super.replace(fb, offset, length, text, attrs);
             return;
         }
 
-        performStateChange(offset, length, text, OperationType.INSERT);
-//        System.out.println("INSERTED");
+        if (Thread.currentThread().getName().equals("AWT-EventQueue-0"))
+        {
+            final boolean permission = dataSharerFacadeTcp.requestWritePermission();
+            if (!permission) return;
+        }
+        else
+        {
+            performStateChange(offset, length, text, OperationType.INSERT);
+        }
 
         super.replace(fb, offset, length, text, attrs);
     }
@@ -52,23 +56,27 @@ public class DataSharerDocumentFilter extends DocumentFilter
 //        System.out.println("offset: " + offset);
 //        System.out.println("length: " + length);
 
-        final boolean permission = dataSharerFacadeTcp.requestWritePermission();
-        if(!permission) return;
-
-        performStateChange(offset, length, null, OperationType.DELETE);
-//        System.out.println("DELETED");
+        if (Thread.currentThread().getName().equals("AWT-EventQueue-0"))
+        {
+            final boolean permission = dataSharerFacadeTcp.requestWritePermission();
+            if (!permission) return;
+        }
+        else
+        {
+            performStateChange(offset, length, null, OperationType.INSERT);
+        }
 
         super.remove(fb, offset, length);
     }
 
     private void performStateChange(int offset, int length, String text, OperationType operationType)
     {
-        if (CompilerProperties.DEBUG)
-            System.out.println("DocumentFilter Thread -> " + Thread.currentThread().getName());
         // Only the AWT-EventQueue-0 thread handles user input.
         // Any other thread is just receiving data from the server.
-        if (!Thread.currentThread().getName().equals("AWT-EventQueue-0")) return;
+        if (CompilerProperties.DEBUG)
+            System.out.println("DocumentFilter Thread -> " + Thread.currentThread().getName());
 
+        // In case you want to implement undo/redo afterward
         shareData(offset, length, text, operationType);
     }
 

@@ -1,15 +1,20 @@
 package org.albert.server.tcp;
 
 import org.albert.CompilerProperties;
+import org.albert.server.DataSharer;
 import org.albert.util.MessageHolder;
+import org.albert.util.SharedFileUtils;
 
 import java.io.ObjectOutputStream;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GlobalTextHandler
 {
+    public static AtomicBoolean available = new AtomicBoolean(true);
+
     // ============== SINGLETON ==============
     private static final GlobalTextHandler INSTANCE = new GlobalTextHandler();
 
@@ -51,6 +56,8 @@ public class GlobalTextHandler
                 e.printStackTrace();
             }
         }
+        // Makes the flag available to write
+        GlobalTextHandler.available.set(true);
     }
 
     public void subscribe(ThreadedPadHandler threadedPadHandler)

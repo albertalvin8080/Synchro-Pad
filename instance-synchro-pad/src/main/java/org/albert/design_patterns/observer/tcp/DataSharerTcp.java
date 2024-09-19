@@ -11,9 +11,12 @@ import java.lang.ref.Cleaner;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DataSharerTcp implements DataSharer
 {
+    private final AtomicBoolean writePermission = new AtomicBoolean();
+    private final Object writeMonitor = new Object(); // Monitor object for synchronization
     private final UUID uuid;
     private final JTextArea textArea;
     private volatile boolean running;
@@ -56,31 +59,27 @@ public class DataSharerTcp implements DataSharer
                 try
                 {
                     MessageHolder msgHolder = (MessageHolder) reader.readObject();
-//                    System.out.println("Received: " + msgHolder.getText());
-
                     short operationType = msgHolder.getOperationType();
-                    int offset = msgHolder.getOffset();
-                    int length = msgHolder.getLength();
-                    String text = msgHolder.getText();
-                    text = text == null ? "" : text;
 
-                    final StringBuilder sb = new StringBuilder(textArea.getText());
                     if (operationType == DataSharer.OP_INSERT ||
                             operationType == DataSharer.OP_DELETE)
                     {
-                        final int offSetPlusLength = offset + length;
-                        sb.replace(offset, offSetPlusLength, text);
-                        final int oldCaretPos = textArea.getCaretPosition();
-                        textArea.setText(sb.toString());
-                        textArea.setCaretPosition(oldCaretPos);
-
-                        if (CompilerProperties.DEBUG)
+                        handleInsertOrDelete(msgHolder);
+                    }
+                    else if (operationType == DataSharer.OP_DENIED_GLOBAL_WRITE)
+                    {
+                        synchronized (writeMonitor)
                         {
-                            System.out.println("OLD CARET:   " + oldCaretPos);
-                            System.out.println("Offset:      " + offset);
-                            System.out.println("Length:      " + length);
-                            System.out.println("Text:        " + text);
-                            System.out.println("Text length: " + text.length());
+                            writePermission.set(false);
+                            writeMonitor.notifyAll();
+                        }
+                    }
+                    else if (operationType == DataSharer.OP_ACCEPTED_GLOBAL_WRITE)
+                    {
+                        synchronized (writeMonitor)
+                        {
+                            writePermission.set(true);
+                            writeMonitor.notifyAll();
                         }
                     }
                 }
@@ -110,6 +109,30 @@ public class DataSharerTcp implements DataSharer
         });
     }
 
+    public void handleInsertOrDelete(MessageHolder msgHolder)
+    {
+        int offset = msgHolder.getOffset();
+        int length = msgHolder.getLength();
+        String text = msgHolder.getText();
+        text = text == null ? "" : text;
+
+        final StringBuilder sb = new StringBuilder(textArea.getText());
+        final int offSetPlusLength = offset + length;
+        sb.replace(offset, offSetPlusLength, text);
+        final int oldCaretPos = textArea.getCaretPosition();
+        textArea.setText(sb.toString());
+        textArea.setCaretPosition(oldCaretPos);
+
+        if (CompilerProperties.DEBUG)
+        {
+            System.out.println("OLD CARET:   " + oldCaretPos);
+            System.out.println("Offset:      " + offset);
+            System.out.println("Length:      " + length);
+            System.out.println("Text:        " + text);
+            System.out.println("Text length: " + text.length());
+        }
+    }
+
     @Override
     public void destroy()
     {
@@ -132,4 +155,34 @@ public class DataSharerTcp implements DataSharer
         writer.writeObject(msgHolder);
         writer.flush();
     }
+
+    // ============== SERVER SYNCHRONIZE ==============
+    public boolean requestWritePermission()
+    {
+        final MessageHolder msgHolder = new MessageHolder(
+                uuid.toString(),
+                DataSharer.OP_REQUEST_GLOBAL_WRITE,
+                0,
+                0,
+                null
+        );
+        try
+        {
+            writer.writeObject(msgHolder);
+            writer.flush();
+
+            // Wait for permission (block the current thread)
+            synchronized (writeMonitor)
+            {
+                writeMonitor.wait();
+            }
+
+            return writePermission.get();
+        }
+        catch (IOException | InterruptedException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+    // !============== SERVER SYNCHRONIZE ==============
 }

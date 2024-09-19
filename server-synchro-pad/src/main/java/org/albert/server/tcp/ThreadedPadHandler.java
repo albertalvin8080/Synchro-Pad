@@ -3,6 +3,7 @@ package org.albert.server.tcp;
 import org.albert.CompilerProperties;
 import org.albert.server.DataSharer;
 import org.albert.util.MessageHolder;
+import org.albert.util.SharedFileUtils;
 
 import java.io.*;
 import java.net.Socket;
@@ -38,7 +39,7 @@ public class ThreadedPadHandler extends Thread
         this.sb = sb;
 
         // Sending the UUID in an initial message
-        MessageHolder initialMessage = new MessageHolder(uuid.toString(), (short) 0, 0, 0, "");
+        MessageHolder initialMessage = new MessageHolder(uuid.toString(), (short) 0, 0, 0, null);
         out.writeObject(initialMessage);
         out.flush();
 //        if (CompilerProperties.DEBUG)
@@ -63,35 +64,53 @@ public class ThreadedPadHandler extends Thread
                 if (CompilerProperties.DEBUG)
                     System.out.println("Received: " + text.replaceAll("\n", " \\\\{nl} "));
 
-                if (operationType == DataSharer.OP_INSERT ||
-                        operationType == DataSharer.OP_DELETE)
+                switch (operationType)
                 {
-                    if (CompilerProperties.DEBUG)
-                        System.out.println("INSERT | DELETE -> " + this.uuid);
-                    sb.replace(offset, offset + length, text);
-                    globalTextHandler.execute(this, msgHolder);
+                    case DataSharer.OP_INSERT:
+                    case DataSharer.OP_DELETE:
+                        if (CompilerProperties.DEBUG)
+                            System.out.println("INSERT | DELETE -> " + this.uuid);
+                        sb.replace(offset, offset + length, text);
+                        globalTextHandler.execute(this, msgHolder);
+                        break;
+
+                    case DataSharer.OP_INIT_GLOBAL:
+                        if (CompilerProperties.DEBUG)
+                            System.out.println("SUBSCRIBE -> " + this.uuid);
+                        globalTextHandler.subscribe(this);
+                        MessageHolder initialMessage = new MessageHolder(
+                                null, (short) 0, 0, 0, sb.toString()
+                        );
+                        out.writeObject(initialMessage);
+                        out.flush();
+                        break;
+
+                    case DataSharer.OP_REQUEST_GLOBAL_WRITE:
+                        short response;
+                        if (GlobalTextHandler.available.compareAndSet(true, false))
+                            response = DataSharer.OP_ACCEPTED_GLOBAL_WRITE;
+                        else
+                            response = DataSharer.OP_DENIED_GLOBAL_WRITE;
+
+                        MessageHolder responseMessage = new MessageHolder(
+                                null, response, 0, 0, null
+                        );
+
+                        if (CompilerProperties.DEBUG)
+                        {
+                            System.out.println("REQUEST GLOBAL WRITE -> " + this.uuid);
+                            System.out.println(response == DataSharer.OP_ACCEPTED_GLOBAL_WRITE ? "Accepted" : "Denied");
+                        }
+                        out.writeObject(responseMessage);
+                        out.flush();
+                        break;
+
+                    default:
+                        if (CompilerProperties.DEBUG)
+                            System.out.println("Unknown operation type -> " + this.uuid);
+                        break;
                 }
-                else if (operationType == DataSharer.OP_INIT_GLOBAL)
-                {
-                    if (CompilerProperties.DEBUG)
-                        System.out.println("SUBSCRIBE -> " + this.uuid);
-                    globalTextHandler.subscribe(this);
-                    MessageHolder initialMessage = new MessageHolder(
-                            "", (short) 0, 0, 0, sb.toString()
-                    );
-                    out.writeObject(initialMessage);
-                    out.flush();
-                }
-                else if (operationType == DataSharer.OP_REQUEST_GLOBAL_WRITE)
-                {
-                    if (CompilerProperties.DEBUG)
-                        System.out.println("REQUEST GLOBAL WRITE -> " + this.uuid);
-                    MessageHolder initialMessage = new MessageHolder(
-                            "", DataSharer.OP_ACCEPTED_GLOBAL_WRITE, 0, 0, null
-                    );
-                    out.writeObject(initialMessage);
-                    out.flush();
-                }
+
             }
             incoming.close();
         }

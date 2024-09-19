@@ -127,36 +127,11 @@ public class DataSharerFacadeTcp implements StateChangeObserver
         synchroPad.disconnect();
     }
 
-    // Remember to use nexted if to check for condition on the server side.
+    // DON'T WORRY ABOUT IT: ~Remember to use nexted if to check for condition on the server side.~
     // ============== SERVER SYNCHRONIZE ==============
     public boolean requestWritePermission()
     {
-        final MessageHolder msgHolder = new MessageHolder(
-                uuid.toString(),
-                DataSharer.OP_REQUEST_GLOBAL_WRITE,
-                0,
-                0,
-                null
-        );
-        try
-        {
-            writer.writeObject(msgHolder);
-            writer.flush();
-            while (true)
-            {
-                final MessageHolder response = (MessageHolder) reader.readObject();
-
-                if(response.getOperationType() == DataSharer.OP_ACCEPTED_GLOBAL_WRITE)
-                    return true;
-                else if(response.getOperationType() == DataSharer.OP_DENIED_GLOBAL_WRITE)
-                    return false;
-            }
-        }
-        catch (IOException | ClassNotFoundException e)
-        {
-            throw new RuntimeException(e);
-        }
-//        return false;
+        return dataSharer.requestWritePermission();
     }
     // !============== SERVER SYNCHRONIZE ==============
 }
