@@ -1,13 +1,13 @@
-package org.albert.server.tcp;
+package org.albert.server.udp;
 
 import org.albert.util.SharedFileUtils;
 
-import java.net.*;
-import java.time.Duration;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SynchroPadServerTcp
+public class SynchroPadServerUdp
 {
     private StringBuilder sb;
     private boolean running = true;
@@ -18,19 +18,20 @@ public class SynchroPadServerTcp
         final Thread writeToSharedFileThread = createWriteToSharedFileThread();
         writeToSharedFileThread.start();
 
-        System.out.println("Commence tcp server...");
-        int i = 1;
-        try (ServerSocket s = new ServerSocket(1234))
+        System.out.println("Starting UDP server...");
+        try (DatagramSocket socket = new DatagramSocket(1234))
         {
-            List<ThreadedPadHandlerTcp> allThreads = new ArrayList<>();
+            List<ThreadedPadHandlerUdp> allHandlers = new ArrayList<>();
+            byte[] buffer = new byte[1024];
             while (running)
             {
-                Socket incoming = s.accept();
-                System.out.println("Spawning " + i);
-                var thread = new ThreadedPadHandlerTcp(incoming, allThreads, sb);
-                thread.start();
-                allThreads.add(thread);
-                i++;
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                socket.receive(packet);
+
+                System.out.println("Received connection...");
+                ThreadedPadHandlerUdp handler = new ThreadedPadHandlerUdp(socket, packet.getAddress(), packet.getPort(), allHandlers, sb);
+                handler.start();
+                allHandlers.add(handler);
             }
         }
         catch (Exception e)
@@ -46,10 +47,8 @@ public class SynchroPadServerTcp
             {
                 try
                 {
-//                    Thread.sleep(Duration.ofMinutes(1).toMillis());
-                    Thread.sleep(Duration.ofSeconds(3).toMillis()); // Debug
+                    Thread.sleep(3000);
                     SharedFileUtils.writeToSharedFile(sb);
-//                    System.out.println("Written"); // Debug
                 }
                 catch (InterruptedException e)
                 {
@@ -59,4 +58,3 @@ public class SynchroPadServerTcp
         });
     }
 }
-

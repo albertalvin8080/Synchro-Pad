@@ -1,6 +1,6 @@
 package org.albert.util;
 
-import java.io.Serializable;
+import java.io.*;
 
 public class MessageHolder implements Serializable
 {
@@ -42,5 +42,23 @@ public class MessageHolder implements Serializable
     public String getText()
     {
         return text;
+    }
+
+    public byte[] serialize() throws IOException
+    {
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(); ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream))
+        {
+            objectOutputStream.writeObject(this);
+            objectOutputStream.flush();
+            return byteArrayOutputStream.toByteArray();
+        }
+    }
+
+    public static MessageHolder deserialize(byte[] data) throws IOException, ClassNotFoundException
+    {
+        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data); ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream))
+        {
+            return (MessageHolder) objectInputStream.readObject();
+        }
     }
 }

@@ -1,9 +1,7 @@
 package org.albert.server.tcp;
 
 import org.albert.CompilerProperties;
-import org.albert.server.DataSharer;
 import org.albert.util.MessageHolder;
-import org.albert.util.SharedFileUtils;
 
 import java.io.ObjectOutputStream;
 import java.net.SocketException;
@@ -25,14 +23,14 @@ public class GlobalTextHandler
     // !============== SINGLETON ==============
 
 
-    private final List<ThreadedPadHandler> globalTextThreads;
+    private final List<ThreadedPadHandlerTcp> globalTextThreads;
 
     private GlobalTextHandler()
     {
         this.globalTextThreads = new ArrayList<>();
     }
 
-    public void execute(ThreadedPadHandler source, MessageHolder msgHolder)
+    public void execute(ThreadedPadHandlerTcp source, MessageHolder msgHolder)
     {
         for (var threadedEchoHandler : globalTextThreads)
         {
@@ -50,6 +48,7 @@ public class GlobalTextHandler
             {
                 // Removing threadedEchoHandler if the socket has been closed.
                 globalTextThreads.remove(threadedEchoHandler);
+                System.out.println("Disconnected -> " + threadedEchoHandler.getUuid());
             }
             catch (Exception e)
             {
@@ -60,13 +59,13 @@ public class GlobalTextHandler
         GlobalTextHandler.available.set(true);
     }
 
-    public void subscribe(ThreadedPadHandler threadedPadHandler)
+    public void subscribe(ThreadedPadHandlerTcp threadedPadHandlerTcp)
     {
-        this.globalTextThreads.add(threadedPadHandler);
+        this.globalTextThreads.add(threadedPadHandlerTcp);
     }
 
-    public void unsubscribe(ThreadedPadHandler threadedPadHandler)
+    public void unsubscribe(ThreadedPadHandlerTcp threadedPadHandlerTcp)
     {
-        this.globalTextThreads.remove(threadedPadHandler);
+        this.globalTextThreads.remove(threadedPadHandlerTcp);
     }
 }

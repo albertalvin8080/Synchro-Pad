@@ -19,6 +19,7 @@ public interface DataSharer extends StateChangeObserver
     public static final short OP_DENIED_GLOBAL_WRITE = 17;
     public static final short OP_ACCEPTED_GLOBAL_WRITE = 18;
     public static final short OP_CLIENT_CONFIRMATION_GLOBAL_WRITE = 19;
+    public static final short OP_DISCONNECT_GLOBAL = 20;
 
     void destroy();
 }

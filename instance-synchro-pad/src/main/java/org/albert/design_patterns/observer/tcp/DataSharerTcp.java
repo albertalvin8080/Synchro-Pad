@@ -8,7 +8,6 @@ import javax.swing.*;
 import java.io.*;
 import java.net.SocketException;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DataSharerTcp implements DataSharer
 {
@@ -65,7 +64,7 @@ public class DataSharerTcp implements DataSharer
                     }
                     else if (operationType == DataSharer.OP_DENIED_GLOBAL_WRITE)
                     {
-                        if(CompilerProperties.DEBUG)
+                        if (CompilerProperties.DEBUG)
                             System.out.println("Write permission: DENIED");
                         synchronized (writeMonitor)
                         {
@@ -79,7 +78,7 @@ public class DataSharerTcp implements DataSharer
                     }
                     else if (operationType == DataSharer.OP_ACCEPTED_GLOBAL_WRITE)
                     {
-                        if(CompilerProperties.DEBUG)
+                        if (CompilerProperties.DEBUG)
                             System.out.println("Write permission: ACCEPTED");
                         synchronized (writeMonitor)
                         {
@@ -145,6 +144,15 @@ public class DataSharerTcp implements DataSharer
     @Override
     public void destroy()
     {
+        try
+        {
+            final MessageHolder finalMsg = new MessageHolder(null, DataSharer.OP_DISCONNECT_GLOBAL, 0, 0, null);
+            writer.writeObject(finalMsg);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
         running = false;
         thread.interrupt();
     }
@@ -177,9 +185,9 @@ public class DataSharerTcp implements DataSharer
         );
         try
         {
-            if(CompilerProperties.DEBUG)
+            if (CompilerProperties.DEBUG)
                 System.out.println("WAITING FOR WRITE PERMISSION");
-            // Wait for permission (block the current thread)
+
             synchronized (writeMonitor)
             {
                 writer.writeObject(msgHolder);

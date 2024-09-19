@@ -3,20 +3,18 @@ package org.albert.server.tcp;
 import org.albert.CompilerProperties;
 import org.albert.server.DataSharer;
 import org.albert.util.MessageHolder;
-import org.albert.util.SharedFileUtils;
 
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.*;
 
-public class ThreadedPadHandler extends Thread
+public class ThreadedPadHandlerTcp extends Thread
 {
     private final UUID uuid;
     private final Socket incoming;
-    private final List<ThreadedPadHandler> allThreads;
+    private final List<ThreadedPadHandlerTcp> allThreads;
     private final GlobalTextHandler globalTextHandler;
     /*
      * Fun fact: you must not create a new ObjectOutputStream nor ObjectInputStream
@@ -27,7 +25,7 @@ public class ThreadedPadHandler extends Thread
     private final ObjectOutputStream out;
     private final StringBuilder sb;
 
-    public ThreadedPadHandler(Socket i, List<ThreadedPadHandler> allThreads, StringBuilder sb) throws IOException
+    public ThreadedPadHandlerTcp(Socket i, List<ThreadedPadHandlerTcp> allThreads, StringBuilder sb) throws IOException
     {
         uuid = UUID.randomUUID();
         incoming = i;
@@ -67,6 +65,12 @@ public class ThreadedPadHandler extends Thread
 
                 switch (operationType)
                 {
+                    case DataSharer.OP_DISCONNECT_GLOBAL:
+                        allThreads.remove(this);
+                        globalTextHandler.unsubscribe(this);
+                        System.out.println("Disconnected -> " + uuid);
+                        break;
+
                     case DataSharer.OP_INSERT:
                     case DataSharer.OP_DELETE:
                         if (CompilerProperties.DEBUG)
@@ -104,9 +108,9 @@ public class ThreadedPadHandler extends Thread
                             out.writeObject(responseMessage);
                             out.flush();
 
-                            if(in.available() <= 0) continue; // UNRELIABLE FOR ObjectInputStream
+                            Thread.sleep(100);
+
                             MessageHolder confirmation = (MessageHolder) in.readObject();
-//                            MessageHolder confirmation = readWithTimeout(in, 100, TimeUnit.MILLISECONDS);
                             if (confirmation.getOperationType() == DataSharer.OP_CLIENT_CONFIRMATION_GLOBAL_WRITE)
                                 break;
                         }
