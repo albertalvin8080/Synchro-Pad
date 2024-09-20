@@ -135,7 +135,8 @@ public class DataSharerTcp implements DataSharer
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            if (CompilerProperties.DEBUG)
+                e.printStackTrace();
         }
         running = false;
         thread.interrupt();

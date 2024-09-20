@@ -57,7 +57,7 @@ public class DataSharerDocumentFilter extends DocumentFilter
         {
             final boolean permission = dataSharerFacadeTcp.requestWritePermission();
             if (!permission) return;
-            performStateChange(offset, length, null, OperationType.INSERT);
+            performStateChange(offset, length, null, OperationType.DELETE);
         }
 
         super.remove(fb, offset, length);

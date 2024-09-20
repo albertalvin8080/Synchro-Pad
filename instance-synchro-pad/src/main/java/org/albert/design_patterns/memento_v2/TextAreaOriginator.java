@@ -1,5 +1,6 @@
 package org.albert.design_patterns.memento_v2;
 
+import org.albert.CompilerProperties;
 import org.albert.design_patterns.observer.tcp.DataSharerFacadeTcp;
 import org.albert.design_patterns.observer.multicast.DataSharerMulticast;
 import org.albert.util.OperationType;
@@ -71,10 +72,13 @@ public class TextAreaOriginator
             // DANGER: You must pass the length WITHOUT the offset because the DataSharer will also sum it.
             dataSharerFacadeTcp.onDelete(offset, text.length(), replacementText);
 
-            System.out.println("ORIGINATOR INSERT");
-            System.out.println(Arrays.toString(
-                    new Object[]{offset, text.length(), replacementText, DataSharerMulticast.OP_DELETE}
-            ));
+            if (CompilerProperties.DEBUG)
+            {
+                System.out.println("ORIGINATOR INSERT");
+                System.out.println(Arrays.toString(
+                        new Object[]{offset, text.length(), replacementText, DataSharerMulticast.OP_DELETE}
+                ));
+            }
         }
         else if (memento.operationType == OperationType.DELETE)
         {
@@ -84,10 +88,13 @@ public class TextAreaOriginator
             // DANGER: You must pass the length WITHOUT the offset because the DataSharer will also sum it.
             dataSharerFacadeTcp.onInsert(offset, replacementText.length(), text);
 
-            System.out.println("ORIGINATOR DELETE");
-            System.out.println(Arrays.toString(
-                    new Object[]{offset, replacementText.length(), text, DataSharerMulticast.OP_INSERT}
-            ));
+            if (CompilerProperties.DEBUG)
+            {
+                System.out.println("ORIGINATOR DELETE");
+                System.out.println(Arrays.toString(
+                        new Object[]{offset, replacementText.length(), text, DataSharerMulticast.OP_INSERT}
+                ));
+            }
         }
 
 //        System.out.println("BEFORE CARET");

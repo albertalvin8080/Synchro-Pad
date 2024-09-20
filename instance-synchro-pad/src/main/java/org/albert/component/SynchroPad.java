@@ -233,6 +233,7 @@ public class SynchroPad extends JFrame
         // TCP Menu
         tcpMenu = new JMenu("TCP");
         connectMenuItem = new JMenuItem("Connect");
+        connectMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK));
         connectMenuItem.addActionListener(e -> {
             CustomIpInputDialog ipPanel = new CustomIpInputDialog(this);
             final int result = ipPanel.getOption();
@@ -249,6 +250,7 @@ public class SynchroPad extends JFrame
         tcpMenu.add(connectMenuItem);
 
         disconnectMenuItem = new JMenuItem("Disconnect");
+        disconnectMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK));
         disconnectMenuItem.addActionListener(e -> {
             if (connected)
                 disconnect();

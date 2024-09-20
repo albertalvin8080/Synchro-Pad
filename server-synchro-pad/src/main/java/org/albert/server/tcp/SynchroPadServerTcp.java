@@ -1,5 +1,6 @@
 package org.albert.server.tcp;
 
+import org.albert.CompilerProperties;
 import org.albert.util.SharedFileUtils;
 
 import java.net.*;
@@ -26,7 +27,8 @@ public class SynchroPadServerTcp
             while (running)
             {
                 Socket incoming = s.accept();
-                System.out.println("Spawning " + i);
+                if (CompilerProperties.DEBUG)
+                    System.out.println("Spawning " + i);
                 var thread = new ThreadedPadHandlerTcp(incoming, allThreads, sb);
                 thread.start();
                 allThreads.add(thread);
