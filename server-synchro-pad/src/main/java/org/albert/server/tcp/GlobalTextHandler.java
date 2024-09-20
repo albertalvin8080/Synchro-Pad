@@ -3,7 +3,10 @@ package org.albert.server.tcp;
 import org.albert.CompilerProperties;
 import org.albert.util.MessageHolder;
 
+import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GlobalTextHandler
 {
+    public static final Integer PORT = 7893;
     public static AtomicBoolean available = new AtomicBoolean(true);
 
     // ============== SINGLETON ==============
@@ -22,11 +26,21 @@ public class GlobalTextHandler
     }
     // !============== SINGLETON ==============
 
-
+    private final ServerSocket serverSocket;
     private final List<ThreadedPadHandlerTcp> globalTextThreads;
+    private final List<ThreadedGlobalWritePermission> permissionThreads;
 
     private GlobalTextHandler()
     {
+        try
+        {
+            this.serverSocket = new ServerSocket(PORT);
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+        this.permissionThreads = new ArrayList<>();
         this.globalTextThreads = new ArrayList<>();
     }
 
@@ -61,11 +75,43 @@ public class GlobalTextHandler
 
     public void subscribe(ThreadedPadHandlerTcp threadedPadHandlerTcp)
     {
+        try
+        {
+            final Socket accept = serverSocket.accept();
+            final ThreadedGlobalWritePermission threadedGlobalWritePermission = new ThreadedGlobalWritePermission(threadedPadHandlerTcp.getUuid(), accept);
+            threadedGlobalWritePermission.start();
+            this.permissionThreads.add(threadedGlobalWritePermission);
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
+        }
         this.globalTextThreads.add(threadedPadHandlerTcp);
     }
 
     public void unsubscribe(ThreadedPadHandlerTcp threadedPadHandlerTcp)
     {
         this.globalTextThreads.remove(threadedPadHandlerTcp);
+        for (ThreadedGlobalWritePermission permissionThread : permissionThreads)
+        {
+            if(permissionThread.getUuid().compareTo(threadedPadHandlerTcp.getUuid()) == 0)
+            {
+                permissionThreads.remove(permissionThread);
+                break;
+            }
+        }
+    }
+
+    public void unsubscribe(ThreadedGlobalWritePermission threadedGlobalWritePermission)
+    {
+        this.permissionThreads.remove(threadedGlobalWritePermission);
+        for (ThreadedPadHandlerTcp globalTextThread : globalTextThreads)
+        {
+            if(globalTextThread.getUuid().compareTo(threadedGlobalWritePermission.getUuid()) == 0)
+            {
+                globalTextThreads.remove(globalTextThread);
+                break;
+            }
+        }
     }
 }

@@ -9,6 +9,7 @@ public class MessageHolder implements Serializable
     private final int offset;
     private final int length;
     private final String text;
+    private String info;
 
     public MessageHolder(String uuid, short operationType, int offset, int length, String text)
     {
@@ -17,6 +18,17 @@ public class MessageHolder implements Serializable
         this.offset = offset;
         this.length = length;
         this.text = text;
+        this.info = null;
+    }
+
+    public void setInfo(String info)
+    {
+        this.info = info;
+    }
+
+    public String getInfo()
+    {
+        return info;
     }
 
     public String getUuid()

@@ -82,44 +82,13 @@ public class ThreadedPadHandlerTcp extends Thread
                     case DataSharer.OP_INIT_GLOBAL:
                         if (CompilerProperties.DEBUG)
                             System.out.println("SUBSCRIBE -> " + this.uuid);
-                        globalTextHandler.subscribe(this);
                         MessageHolder initialMessage = new MessageHolder(
                                 null, (short) 0, 0, 0, sb.toString()
                         );
+                        initialMessage.setInfo(String.valueOf(GlobalTextHandler.PORT));
                         out.writeObject(initialMessage);
                         out.flush();
-                        break;
-
-                    case DataSharer.OP_REQUEST_GLOBAL_WRITE:
-                        short response;
-                        if (GlobalTextHandler.available.compareAndSet(true, false))
-                            response = DataSharer.OP_ACCEPTED_GLOBAL_WRITE;
-                        else
-                            response = DataSharer.OP_DENIED_GLOBAL_WRITE;
-
-                        while (true)
-                        {
-                            if (CompilerProperties.DEBUG)
-                                System.out.println("SENDING RESPONSE...");
-
-                            MessageHolder responseMessage = new MessageHolder(
-                                    null, response, 0, 0, null
-                            );
-
-                            Thread.sleep(100);
-                            out.writeObject(responseMessage);
-                            out.flush();
-
-                            MessageHolder confirmation = (MessageHolder) in.readObject();
-                            if (confirmation.getOperationType() == DataSharer.OP_CLIENT_CONFIRMATION_GLOBAL_WRITE)
-                                break;
-                        }
-
-                        if (CompilerProperties.DEBUG)
-                        {
-                            System.out.println("REQUEST GLOBAL WRITE (after loop) -> " + this.uuid);
-                            System.out.println(response == DataSharer.OP_ACCEPTED_GLOBAL_WRITE ? "Accepted" : "Denied");
-                        }
+                        globalTextHandler.subscribe(this);
                         break;
 
                     default:

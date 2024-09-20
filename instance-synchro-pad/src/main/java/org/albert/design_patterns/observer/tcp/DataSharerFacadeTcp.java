@@ -40,12 +40,14 @@ public class DataSharerFacadeTcp implements StateChangeObserver
     }
 
     private Socket socket;
+    private String serverIp;
     private ObjectInputStream reader;
     private ObjectOutputStream writer;
 
     private void initializeNetworking(String serverIp) throws IOException, ClassNotFoundException
     {
         final int port = 1234;
+        this.serverIp = serverIp;
         socket = new Socket(serverIp, port);
         reader = new ObjectInputStream(socket.getInputStream());
         writer = new ObjectOutputStream(socket.getOutputStream());
@@ -65,7 +67,7 @@ public class DataSharerFacadeTcp implements StateChangeObserver
         try
         {
             initializeNetworking(serverIp);
-            dataSharer = new DataSharerTcp(socket, uuid, textArea, reader, writer);
+            dataSharer = new DataSharerTcp(serverIp, uuid, textArea, reader, writer);
             return true;
         }
         // Expected exceptions
@@ -130,9 +132,9 @@ public class DataSharerFacadeTcp implements StateChangeObserver
 
     // DON'T WORRY ABOUT IT: ~Remember to use nexted if to check for condition on the server side.~
     // ============== SERVER SYNCHRONIZE ==============
-    public void requestWritePermissionAsync(Consumer<Boolean> callback)
+    public boolean requestWritePermission()
     {
-        dataSharer.requestWritePermissionAsync(callback);
+        return dataSharer.requestWritePermission();
     }
     // !============== SERVER SYNCHRONIZE ==============
 }
