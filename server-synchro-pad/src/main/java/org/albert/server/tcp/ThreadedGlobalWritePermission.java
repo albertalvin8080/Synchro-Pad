@@ -1,7 +1,7 @@
 package org.albert.server.tcp;
 
-import org.albert.CompilerProperties;
-import org.albert.server.DataSharer;
+import org.albert.design_patterns.observer.DataSharer;
+import org.albert.util.CompilerProperties;
 import org.albert.util.MessageHolder;
 
 import java.io.EOFException;
@@ -10,7 +10,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.List;
 import java.util.UUID;
 
 public class ThreadedGlobalWritePermission extends Thread

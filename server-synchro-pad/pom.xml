@@ -21,7 +21,11 @@
     </properties>
 
     <dependencies>
-
+        <dependency>
+            <groupId>org.albert</groupId>
+            <artifactId>instance-synchro-pad</artifactId>
+            <version>1.1.0</version>
+        </dependency>
     </dependencies>
 
     <build>

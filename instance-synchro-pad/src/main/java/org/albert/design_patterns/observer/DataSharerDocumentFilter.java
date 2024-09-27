@@ -1,15 +1,12 @@
 package org.albert.design_patterns.observer;
 
-import org.albert.CompilerProperties;
-import org.albert.InstanceMain;
+import org.albert.util.CompilerProperties;
 import org.albert.design_patterns.observer.tcp.DataSharerFacadeTcp;
 import org.albert.util.OperationType;
 
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
-import java.io.EOFException;
-import java.net.SocketException;
 
 public class DataSharerDocumentFilter extends DocumentFilter
 {

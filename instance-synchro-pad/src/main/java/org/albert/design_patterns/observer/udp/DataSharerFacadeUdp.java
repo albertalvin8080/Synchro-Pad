@@ -1,6 +1,5 @@
 package org.albert.design_patterns.observer.udp;
 
-import org.albert.CompilerProperties;
 import org.albert.component.SynchroPad;
 import org.albert.design_patterns.observer.DataSharer;
 import org.albert.design_patterns.observer.StateChangeObserver;

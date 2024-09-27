@@ -1,4 +1,4 @@
-package org.albert;
+package org.albert.util;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -8,5 +8,5 @@ mvn clean package -Pdebug
 
 ## Production mode
 ```shell
-mvn clean package -Pproduction
+mvn clean package -Pprod
 ```

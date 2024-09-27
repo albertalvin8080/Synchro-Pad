@@ -1,6 +1,6 @@
 package org.albert.server.udp;
 
-import org.albert.server.DataSharer;
+import org.albert.design_patterns.observer.DataSharer;
 import org.albert.util.MessageHolder;
 
 import java.net.DatagramPacket;

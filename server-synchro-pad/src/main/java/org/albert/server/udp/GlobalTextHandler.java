@@ -1,6 +1,6 @@
 package org.albert.server.udp;
 
-import org.albert.CompilerProperties;
+import org.albert.util.CompilerProperties;
 import org.albert.util.MessageHolder;
 
 import java.net.DatagramPacket;

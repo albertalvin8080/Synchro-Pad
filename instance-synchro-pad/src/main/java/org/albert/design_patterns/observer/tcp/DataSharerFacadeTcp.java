@@ -1,8 +1,7 @@
 package org.albert.design_patterns.observer.tcp;
 
-import org.albert.CompilerProperties;
+import org.albert.util.CompilerProperties;
 import org.albert.component.SynchroPad;
-import org.albert.design_patterns.observer.DataSharer;
 import org.albert.design_patterns.observer.StateChangeObserver;
 import org.albert.util.MessageHolder;
 
@@ -15,7 +14,6 @@ import java.net.NoRouteToHostException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 public class DataSharerFacadeTcp implements StateChangeObserver
 {

@@ -1,7 +1,7 @@
 package org.albert.server.tcp;
 
-import org.albert.CompilerProperties;
-import org.albert.server.DataSharer;
+import org.albert.design_patterns.observer.DataSharer;
+import org.albert.util.CompilerProperties;
 import org.albert.util.MessageHolder;
 
 import java.io.*;

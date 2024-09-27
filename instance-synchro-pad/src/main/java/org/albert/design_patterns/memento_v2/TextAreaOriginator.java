@@ -1,6 +1,6 @@
 package org.albert.design_patterns.memento_v2;
 
-import org.albert.CompilerProperties;
+import org.albert.util.CompilerProperties;
 import org.albert.design_patterns.observer.tcp.DataSharerFacadeTcp;
 import org.albert.design_patterns.observer.multicast.DataSharerMulticast;
 import org.albert.util.OperationType;
