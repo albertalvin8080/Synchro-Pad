@@ -1,5 +1,6 @@
 package org.albert.design_patterns.memento_v2;
 
+import jdk.jfr.Experimental;
 import org.albert.design_patterns.observer.tcp.DataSharerFacadeTcp;
 import org.albert.util.OperationType;
 
@@ -7,6 +8,7 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 
+@Experimental
 public class MementoDocumentWithDataSharerFilter extends DocumentFilter
 {
     private final TextAreaCaretaker textAreaCaretaker;

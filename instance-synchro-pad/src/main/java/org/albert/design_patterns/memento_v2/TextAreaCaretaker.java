@@ -2,6 +2,7 @@ package org.albert.design_patterns.memento_v2;
 
 import org.albert.util.OperationType;
 
+import javax.swing.text.BadLocationException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -51,7 +52,7 @@ public class TextAreaCaretaker
         {
             originator.restoreMemento(memento);
         }
-        catch (IllegalArgumentException | StringIndexOutOfBoundsException e)
+        catch (IllegalArgumentException | StringIndexOutOfBoundsException | BadLocationException e)
         {
             System.out.println(e.getMessage());
             redoDeque.clear();
@@ -83,7 +84,7 @@ public class TextAreaCaretaker
         {
             originator.restoreMemento(memento);
         }
-        catch (IllegalArgumentException | StringIndexOutOfBoundsException e)
+        catch (IllegalArgumentException | StringIndexOutOfBoundsException | BadLocationException e)
         {
             System.out.println(e.getMessage());
             redoDeque.clear();

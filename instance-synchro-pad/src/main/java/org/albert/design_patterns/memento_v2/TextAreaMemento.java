@@ -9,15 +9,16 @@ public class TextAreaMemento
 //    final int length;
     final String text;
     final OperationType operationType;
-    final int caretPosition;
+    // Unnecessary when using AbstractDocument.replace() instead of JTextArea.setText()
+//    final int caretPosition;
     final String replacementText;
 
-    public TextAreaMemento(int offset, String text, OperationType operationType, int caretPosition, String replacementText)
+    public TextAreaMemento(int offset, String text, OperationType operationType, String replacementText)
     {
         this.offset = offset;
         this.text = text;
         this.operationType = operationType;
-        this.caretPosition = caretPosition;
+//        this.caretPosition = caretPosition;
         this.replacementText = replacementText;
     }
 }

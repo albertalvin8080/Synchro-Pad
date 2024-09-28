@@ -6,16 +6,20 @@ import org.albert.design_patterns.observer.multicast.DataSharerMulticast;
 import org.albert.util.OperationType;
 
 import javax.swing.*;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.BadLocationException;
 import java.util.Arrays;
 
 public class TextAreaOriginator
 {
     private final JTextArea textArea;
+    private final AbstractDocument abstractDocument;
     private final DataSharerFacadeTcp dataSharerFacadeTcp;
 
     public TextAreaOriginator(JTextArea textArea, DataSharerFacadeTcp dataSharerFacadeTcp)
     {
         this.textArea = textArea;
+        this.abstractDocument = (AbstractDocument) textArea.getDocument();
         this.dataSharerFacadeTcp = dataSharerFacadeTcp;
     }
 
@@ -50,14 +54,17 @@ public class TextAreaOriginator
             System.out.println("text: " + text);
         }
 
+//        return new TextAreaMemento(
+//                offset, text, operationType, textArea.getCaretPosition(), replacementText
+//        );
         return new TextAreaMemento(
-                offset, text, operationType, textArea.getCaretPosition(), replacementText
+                offset, text, operationType, replacementText
         );
     }
 
-    public void restoreMemento(TextAreaMemento memento)
+    public void restoreMemento(TextAreaMemento memento) throws BadLocationException
     {
-        final StringBuilder sb = new StringBuilder(textArea.getText());
+//        final StringBuilder sb = new StringBuilder(textArea.getText());
         final int offset = memento.offset;
         final String text = memento.text;
         final String replacementText = memento.replacementText;
@@ -66,10 +73,11 @@ public class TextAreaOriginator
         // WARNING: if the operation was DELETE, then you need to re-insert the text into the textArea.
         if (memento.operationType == OperationType.INSERT)
         {
-            final int length = offset + text.length();
-            sb.replace(offset, length, replacementText);
-            textArea.setText(sb.toString());
+//            final int length = offset + text.length();
+//            sb.replace(offset, length, replacementText);
+//            textArea.setText(sb.toString());
             // DANGER: You must pass the length WITHOUT the offset because the DataSharer will also sum it.
+            abstractDocument.replace(offset, text.length(), replacementText, null);
             dataSharerFacadeTcp.onDelete(offset, text.length(), replacementText);
 
             if (CompilerProperties.DEBUG)
@@ -82,10 +90,11 @@ public class TextAreaOriginator
         }
         else if (memento.operationType == OperationType.DELETE)
         {
-            final int length = offset + replacementText.length();
-            sb.replace(offset, length, text);
-            textArea.setText(sb.toString());
+//            final int length = offset + replacementText.length();
+//            sb.replace(offset, length, text);
+//            textArea.setText(sb.toString());
             // DANGER: You must pass the length WITHOUT the offset because the DataSharer will also sum it.
+            abstractDocument.replace(offset, replacementText.length(), text, null);
             dataSharerFacadeTcp.onInsert(offset, replacementText.length(), text);
 
             if (CompilerProperties.DEBUG)
@@ -98,7 +107,7 @@ public class TextAreaOriginator
         }
 
 //        System.out.println("BEFORE CARET");
-        textArea.setCaretPosition(memento.caretPosition);
+//        textArea.setCaretPosition(memento.caretPosition); // Unnecessary when using AbstractDocument instead of textArea.setText();
 //        System.out.println("AFTER CARET");
     }
 

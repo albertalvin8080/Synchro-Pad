@@ -5,6 +5,8 @@ import org.albert.design_patterns.observer.DataSharer;
 import org.albert.util.MessageHolder;
 
 import javax.swing.*;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.BadLocationException;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
@@ -12,11 +14,10 @@ import java.util.UUID;
 
 public class DataSharerTcp implements DataSharer
 {
-    private final Object writeMonitor = new Object(); // Monitor object for synchronization
-
     private final Socket permissionSocket;
     private final UUID uuid;
     private final JTextArea textArea;
+    private final AbstractDocument abstractDocument;
     private volatile boolean running;
     private final Thread thread;
     private final ObjectInputStream reader;
@@ -27,6 +28,7 @@ public class DataSharerTcp implements DataSharer
     public DataSharerTcp(String serverIP, UUID uuid, JTextArea textArea, ObjectInputStream reader, ObjectOutputStream writer) throws IOException, ClassNotFoundException
     {
         this.uuid = uuid;
+        this.abstractDocument = (AbstractDocument) textArea.getDocument();
         this.textArea = textArea;
         this.reader = reader;
         this.writer = writer;
@@ -101,23 +103,23 @@ public class DataSharerTcp implements DataSharer
         });
     }
 
-    public void handleInsertOrDelete(MessageHolder msgHolder)
+    public void handleInsertOrDelete(MessageHolder msgHolder) throws BadLocationException
     {
         int offset = msgHolder.getOffset();
         int length = msgHolder.getLength();
         String text = msgHolder.getText();
         text = text == null ? "" : text;
 
-        final StringBuilder sb = new StringBuilder(textArea.getText());
-        final int offSetPlusLength = offset + length;
-        sb.replace(offset, offSetPlusLength, text);
-        final int oldCaretPos = textArea.getCaretPosition();
-        textArea.setText(sb.toString());
-        textArea.setCaretPosition(oldCaretPos);
+//        final StringBuilder sb = new StringBuilder(textArea.getText());
+//        final int offSetPlusLength = offset + length;
+        abstractDocument.replace(offset, length, text, null);
+//        final int oldCaretPos = textArea.getCaretPosition();
+//        textArea.setText(sb.toString());
+//        textArea.setCaretPosition(oldCaretPos);
 
         if (CompilerProperties.DEBUG)
         {
-            System.out.println("OLD CARET:   " + oldCaretPos);
+//            System.out.println("OLD CARET:   " + oldCaretPos);
             System.out.println("Offset:      " + offset);
             System.out.println("Length:      " + length);
             System.out.println("Text:        " + text);
