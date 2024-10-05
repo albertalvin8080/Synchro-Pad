@@ -1,6 +1,8 @@
 package org.albert.design_patterns.memento_v2;
 
 import org.albert.util.OperationType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
@@ -8,6 +10,7 @@ import javax.swing.text.DocumentFilter;
 
 public class MementoDocumentFilter extends DocumentFilter
 {
+    private static final Logger logger = LoggerFactory.getLogger(org.albert.design_patterns.memento_v2.MementoDocumentFilter.class);
     private final TextAreaCaretaker textAreaCaretaker;
 
     public MementoDocumentFilter(TextAreaCaretaker textAreaCaretaker)
@@ -18,11 +21,11 @@ public class MementoDocumentFilter extends DocumentFilter
     @Override
     public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException
     {
-//        System.out.println("--------------------------");
-//        System.out.println("REPLACE");
-//        System.out.println("offset: " + offset);
-//        System.out.println("length: " + length);
-//        System.out.println("text: " + text);
+//        logger.debug("--------------------------");
+//        logger.debug("REPLACE");
+//        logger.debug("offset: {}", offset);
+//        logger.debug("length: {}", length);
+//        logger.debug("text: {}", text);
 
         if (text.isEmpty())
         {
@@ -31,7 +34,7 @@ public class MementoDocumentFilter extends DocumentFilter
         }
 
         performStateChange(offset, length, text, OperationType.INSERT);
-//        System.out.println("INSERTED");
+//        logger.info("INSERTED");
 
         super.replace(fb, offset, length, text, attrs);
     }
@@ -39,13 +42,13 @@ public class MementoDocumentFilter extends DocumentFilter
     @Override
     public void remove(FilterBypass fb, int offset, int length) throws BadLocationException
     {
-//        System.out.println("--------------------------");
-//        System.out.println("REMOVE");
-//        System.out.println("offset: " + offset);
-//        System.out.println("length: " + length);
+//        logger.debug("--------------------------");
+//        logger.debug("REMOVE");
+//        logger.debug("offset: {}", offset);
+//        logger.debug("length: {}", length);
 
         performStateChange(offset, length, null, OperationType.DELETE);
-//        System.out.println("DELETED");
+//        logger.info("DELETED");
 
         super.remove(fb, offset, length);
     }

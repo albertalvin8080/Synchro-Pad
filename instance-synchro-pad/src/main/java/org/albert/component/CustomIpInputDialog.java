@@ -110,7 +110,6 @@ public class CustomIpInputDialog extends JDialog
     // This were inside the constructor
     // NOT WORKING: Request focus for the first JTextField after the panel is fully initialized
 //        SwingUtilities.invokeLater(() -> {
-//            System.out.println("UE");
 //            ipFields[0].requestFocusInWindow();
 //        });
     // NOT WORKING ON ARCH: Add a focus listener to ensure the first field gains focus when the panel is displayed

@@ -3,6 +3,8 @@ package org.albert.server.tcp;
 import org.albert.design_patterns.observer.DataSharer;
 import org.albert.util.CompilerProperties;
 import org.albert.util.MessageHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.Socket;
@@ -12,6 +14,8 @@ import java.util.UUID;
 
 public class ThreadedPadHandlerTcp extends Thread
 {
+    private static final Logger logger = LoggerFactory.getLogger(ThreadedPadHandlerTcp.class);
+
     private final UUID uuid;
     private final Socket incoming;
     private final List<ThreadedPadHandlerTcp> allThreads;
@@ -42,7 +46,7 @@ public class ThreadedPadHandlerTcp extends Thread
         out.writeObject(initialMessage);
         out.flush();
 //        if (CompilerProperties.DEBUG)
-        System.out.println("Init -> " + initialMessage.getUuid());
+        logger.info("Init -> " + initialMessage.getUuid());
     }
 
     @Override
@@ -61,27 +65,27 @@ public class ThreadedPadHandlerTcp extends Thread
                 text = text == null ? "" : text;
 
                 if (CompilerProperties.DEBUG)
-                    System.out.println("Received: " + text.replaceAll("\n", " \\\\{nl} "));
+                    logger.info("Received: " + text.replaceAll("\n", " \\\\{nl} "));
 
                 switch (operationType)
                 {
                     case DataSharer.OP_DISCONNECT_GLOBAL:
                         allThreads.remove(this);
                         globalTextHandler.unsubscribe(this);
-                        System.out.println("Disconnected -> " + uuid);
+                        logger.info("Disconnected -> " + uuid);
                         break;
 
                     case DataSharer.OP_INSERT:
                     case DataSharer.OP_DELETE:
                         if (CompilerProperties.DEBUG)
-                            System.out.println("INSERT | DELETE -> " + this.uuid);
+                            logger.info("INSERT | DELETE -> " + this.uuid);
                         sb.replace(offset, offset + length, text);
                         globalTextHandler.execute(this, msgHolder);
                         break;
 
                     case DataSharer.OP_INIT_GLOBAL:
                         if (CompilerProperties.DEBUG)
-                            System.out.println("SUBSCRIBE -> " + this.uuid);
+                            logger.info("SUBSCRIBE -> " + this.uuid);
                         MessageHolder initialMessage = new MessageHolder(
                                 null, (short) 0, 0, 0, sb.toString()
                         );
@@ -93,7 +97,7 @@ public class ThreadedPadHandlerTcp extends Thread
 
                     default:
                         if (CompilerProperties.DEBUG)
-                            System.out.println("Unknown operation type: " + operationType + " -> " + this.uuid);
+                            logger.info("Unknown operation type: " + operationType + " -> " + this.uuid);
                         break;
                 }
 
@@ -105,11 +109,11 @@ public class ThreadedPadHandlerTcp extends Thread
             globalTextHandler.unsubscribe(this);
             allThreads.remove(this);
 //            if (CompilerProperties.DEBUG)
-            System.out.println("Disconnected -> " + uuid);
+            logger.info("Disconnected -> " + uuid);
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            logger.error("{}", e.getStackTrace());
         }
     }
 

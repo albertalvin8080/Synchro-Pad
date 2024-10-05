@@ -5,6 +5,8 @@ import org.albert.design_patterns.decorator.contract.PatternFinder;
 import org.albert.design_patterns.decorator.decorated.PlainPatternFinder;
 import org.albert.design_patterns.decorator.decorator.CaseInsensitivePatternFinderDecorator;
 import org.albert.design_patterns.decorator.decorator.WholeWordPatternFinderDecorator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
@@ -15,6 +17,8 @@ import java.util.List;
 
 public class WordFinderUtil
 {
+    private static final Logger logger = LoggerFactory.getLogger(WordFinderUtil.class);
+
     private List<WordIndex> wordIndexList;
     private String currentPattern;
     private int currentListIndex;
@@ -92,9 +96,9 @@ public class WordFinderUtil
     {
         // Clear previous highlights
         removeHighlights();
-//        System.out.println(localCurrentListIndex);
-//        System.out.println(wordIndex.getStart());
-//        System.out.println(wordIndex.getEnd());
+//        logger.info(localCurrentListIndex);
+//        logger.info(wordIndex.getStart());
+//        logger.info(wordIndex.getEnd());
 
         for (int index = 0; index < wordIndexList.size(); ++index)
         {
@@ -120,7 +124,7 @@ public class WordFinderUtil
             }
             catch (BadLocationException ex)
             {
-                ex.printStackTrace();
+                logger.error("{}", ex.getStackTrace());
             }
         }
 

@@ -94,6 +94,7 @@ JPA_Hibernate/first-test/mysql-data/
 
 **/docker-data/
 
-#*/.mvn
 #*/mvnw
 #*/mvnw.cmd
+
+**/*.egg-info 

@@ -17,20 +17,20 @@
 //    @Override
 //    public void insertUpdate(DocumentEvent e)
 //    {
-//        System.out.println("INSERT");
+//        logger.info("INSERT");
 //        textAreaCaretaker.saveState();
 //    }
 //
 //    @Override
 //    public void removeUpdate(DocumentEvent e)
 //    {
-//        System.out.println("REMOVE");
+//        logger.info("REMOVE");
 //        textAreaCaretaker.saveState();
 //    }
 //
 //    @Override
 //    public void changedUpdate(DocumentEvent e)
 //    {
-////                System.out.println("CHANGE");
+////                logger.info("CHANGE");
 //    }
 //}

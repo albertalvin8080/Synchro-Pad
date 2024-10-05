@@ -3,6 +3,8 @@ package org.albert.design_patterns.observer.udp;
 import org.albert.util.CompilerProperties;
 import org.albert.design_patterns.observer.DataSharer;
 import org.albert.util.MessageHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.io.*;
@@ -11,6 +13,8 @@ import java.util.UUID;
 
 public class DataSharerUdp implements DataSharer
 {
+    private static final Logger logger = LoggerFactory.getLogger(DataSharerFacadeUdp.class);
+
     private final UUID uuid;
     private final JTextArea textArea;
     private final DatagramSocket socket;
@@ -46,7 +50,7 @@ public class DataSharerUdp implements DataSharer
                 }
                 catch (Exception e)
                 {
-                    e.printStackTrace();
+                    logger.info("{}", e.getStackTrace());
                     running = false;
                 }
             }
@@ -111,11 +115,11 @@ public class DataSharerUdp implements DataSharer
 
         if (CompilerProperties.DEBUG)
         {
-            System.out.println("OLD CARET:   " + oldCaretPos);
-            System.out.println("Offset:      " + offset);
-            System.out.println("Length:      " + length);
-            System.out.println("Text:        " + text);
-            System.out.println("Text length: " + text.length());
+            logger.info("OLD CARET:   " + oldCaretPos);
+            logger.info("Offset:      " + offset);
+            logger.info("Length:      " + length);
+            logger.info("Text:        " + text);
+            logger.info("Text length: " + text.length());
         }
     }
 }

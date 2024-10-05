@@ -24,7 +24,7 @@
 ////                Thread.sleep(Duration.ofMinutes(1));
 //                Thread.sleep(Duration.ofSeconds(5_000)); // Debug
 //                writeToSharedFile(localText);
-//                System.out.println("Written");
+//                logger.info("Written");
 //            }
 //            catch (InterruptedException e)
 //            {
@@ -46,7 +46,7 @@
 //            DatagramPacket dIn = new DatagramPacket(buf, buf.length);
 //            while (true)
 //            {
-//                System.out.println("Server listening...");
+//                logger.info("Server listening...");
 //                s.receive(dIn);
 //                String str = new String(buf, 0, dIn.getLength());
 //                /*

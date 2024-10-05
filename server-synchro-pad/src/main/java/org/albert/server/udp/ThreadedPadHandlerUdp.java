@@ -2,6 +2,8 @@ package org.albert.server.udp;
 
 import org.albert.design_patterns.observer.DataSharer;
 import org.albert.util.MessageHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -11,6 +13,8 @@ import java.util.UUID;
 
 public class ThreadedPadHandlerUdp extends Thread
 {
+    private static final Logger logger = LoggerFactory.getLogger(ThreadedPadHandlerUdp.class);
+
     private final UUID uuid;
     private final DatagramSocket socket;
     private final InetAddress address;
@@ -30,7 +34,7 @@ public class ThreadedPadHandlerUdp extends Thread
         this.sb = sb;
 
         sendMessage(new MessageHolder(uuid.toString(), (short) 0, 0, 0, null));
-        System.out.println("Init -> " + uuid);
+        logger.info("Init -> " + uuid);
     }
 
     @Override
@@ -73,7 +77,7 @@ public class ThreadedPadHandlerUdp extends Thread
                 sendMessage(new MessageHolder(null, (short) 0, 0, 0, sb.toString()));
                 break;
             default:
-                System.out.println("Unknown operation type: " + operationType);
+                logger.info("Unknown operation type: " + operationType);
                 break;
         }
     }

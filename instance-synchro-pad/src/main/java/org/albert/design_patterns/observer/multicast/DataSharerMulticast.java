@@ -1,6 +1,8 @@
 package org.albert.design_patterns.observer.multicast;
 
 import org.albert.design_patterns.observer.DataSharer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -10,6 +12,8 @@ import java.util.UUID;
 
 public class DataSharerMulticast implements DataSharer
 {
+    private static final Logger logger = LoggerFactory.getLogger(DataSharerMulticast.class);
+    
     private final UUID uuid;
     private InetAddress mcastaddr;
     private InetSocketAddress group;
@@ -36,7 +40,7 @@ public class DataSharerMulticast implements DataSharer
             }
             catch (IOException e)
             {
-                e.printStackTrace();
+                logger.error("{}", e.getStackTrace());
             }
             finally
             {
@@ -48,9 +52,9 @@ public class DataSharerMulticast implements DataSharer
         });
 
         running = true;
-        System.out.println("Waiting for init...");
+        logger.info("Waiting for init...");
         init();
-        System.out.println("Init finished.");
+        logger.info("Init finished.");
 
         thread = createAsyncReceiveThread();
         thread.start();
@@ -80,7 +84,7 @@ public class DataSharerMulticast implements DataSharer
                 DatagramPacket dIn = messageHandler.receiveMessage();
                 if (dIn == null)
                 {
-                    System.out.println(initConfimed);
+                    logger.info("{}", initConfimed);
                     if (!initConfimed)
                         messageHandler.sendMessage(OP_NEW_REQUEST, 0, 0, "");
                     continue;
@@ -111,18 +115,18 @@ public class DataSharerMulticast implements DataSharer
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            logger.error("{}", e.getStackTrace());
         }
         finally
         {
             try
             {
                 multicastSocket.setSoTimeout(0);  // Set timeout back to infinite (no timeout)
-                System.out.println("Timeout reset to infinite.");
+                logger.info("Timeout reset to infinite.");
             }
             catch (SocketException e)
             {
-                e.printStackTrace();
+                logger.error("{}", e.getStackTrace());
             }
         }
     }
@@ -130,7 +134,7 @@ public class DataSharerMulticast implements DataSharer
     private Thread createAsyncReceiveThread()
     {
         return new Thread(() -> {
-            System.out.println("Thread listening...");
+            logger.info("Thread listening...");
             while (running)
             {
                 DatagramPacket dIn = messageHandler.receiveMessage();

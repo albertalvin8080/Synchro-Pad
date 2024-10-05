@@ -4,6 +4,8 @@ import org.albert.util.CompilerProperties;
 import org.albert.component.SynchroPad;
 import org.albert.design_patterns.observer.StateChangeObserver;
 import org.albert.util.MessageHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -17,6 +19,7 @@ import java.util.UUID;
 
 public class DataSharerFacadeTcp implements StateChangeObserver
 {
+    private static final Logger logger = LoggerFactory.getLogger(DataSharerFacadeTcp.class);
     private static DataSharerFacadeTcp INSTANCE;
 
     public static DataSharerFacadeTcp getInstance(SynchroPad synchroPad, JTextArea textArea)
@@ -73,12 +76,12 @@ public class DataSharerFacadeTcp implements StateChangeObserver
         {
             // Connection Refused / UnknownHostException / NoNoRouteToHostException
             if (CompilerProperties.DEBUG)
-                e.printStackTrace();
+                logger.error("{}", e.getStackTrace());
         }
         // Unexpected exceptions
         catch (Exception e)
         {
-            e.printStackTrace();
+            logger.error("{}", e.getStackTrace());
         }
         return false;
     }
@@ -121,7 +124,7 @@ public class DataSharerFacadeTcp implements StateChangeObserver
 
     private void handleSocketClosed()
     {
-        System.out.println("SOCKET CLOSED FORCEFULLY");
+        logger.info("SOCKET CLOSED FORCEFULLY");
         JOptionPane.showMessageDialog(
                 synchroPad, "Disconnected from server", "Error", JOptionPane.ERROR_MESSAGE
         );

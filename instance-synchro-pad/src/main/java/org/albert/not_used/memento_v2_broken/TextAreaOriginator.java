@@ -1,11 +1,15 @@
 package org.albert.not_used.memento_v2_broken;
 
 import org.albert.util.OperationType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 
 public class TextAreaOriginator
 {
+    private static final Logger logger = LoggerFactory.getLogger(TextAreaOriginator.class);
+
     private final JTextArea textArea;
 
     public TextAreaOriginator(JTextArea textArea)
@@ -53,9 +57,9 @@ public class TextAreaOriginator
             sb.insert(offset, text);
             textArea.setText(sb.toString());
         }
-        System.out.println("BEFORE CARET");
+        logger.info("BEFORE CARET");
         textArea.setCaretPosition(memento.caretPosition);
-        System.out.println("AFTER CARET");
+        logger.info("AFTER CARET");
     }
 }
 

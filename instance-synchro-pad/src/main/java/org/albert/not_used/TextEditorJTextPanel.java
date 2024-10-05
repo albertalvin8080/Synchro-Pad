@@ -79,8 +79,8 @@
 //            int start = textPane.getSelectionStart();
 //            int end = textPane.getSelectionEnd();
 //
-////            System.out.println(start);
-////            System.out.println(end);
+////            logger.info(start);
+////            logger.info(end);
 //
 //            if(start == end)
 //            {

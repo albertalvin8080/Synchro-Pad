@@ -69,7 +69,7 @@
 //        }
 //        catch (UnsupportedLookAndFeelException e)
 //        {
-//            e.printStackTrace();
+//            logger.error("{}", e.getStackTrace());
 //        }
 //
 //        // ------- TEXTAREA -------
@@ -115,7 +115,7 @@
 //        // File Menu
 //        saveMenuItem.addActionListener(e -> {
 //            menuBarCommandInvoker.execute("save");
-////            System.out.println("Connected: " + connected);
+////            logger.info("Connected: " + connected);
 //            // Prevents changing the title if there's a multicast connection.
 //            if(connected) return;
 //

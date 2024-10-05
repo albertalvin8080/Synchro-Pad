@@ -4,6 +4,8 @@ import org.albert.component.SynchroPad;
 import org.albert.design_patterns.observer.DataSharer;
 import org.albert.design_patterns.observer.StateChangeObserver;
 import org.albert.util.MessageHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.io.*;
@@ -12,6 +14,8 @@ import java.util.UUID;
 
 public class DataSharerFacadeUdp implements StateChangeObserver
 {
+    private static final Logger logger = LoggerFactory.getLogger(DataSharerFacadeUdp.class);
+
     private static DataSharerFacadeUdp INSTANCE;
 
     public static DataSharerFacadeUdp getInstance(SynchroPad synchroPad, JTextArea textArea)
@@ -67,7 +71,7 @@ public class DataSharerFacadeUdp implements StateChangeObserver
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            logger.info("{}", e.getStackTrace());
         }
         return false;
     }
@@ -110,7 +114,7 @@ public class DataSharerFacadeUdp implements StateChangeObserver
 
     private void handleSocketClosed()
     {
-        System.out.println("SOCKET CLOSED FORCEFULLY");
+        logger.info("SOCKET CLOSED FORCEFULLY");
         JOptionPane.showMessageDialog(
                 synchroPad, "Disconnected from server", "Error", JOptionPane.ERROR_MESSAGE
         );

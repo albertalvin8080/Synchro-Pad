@@ -1,6 +1,8 @@
 package org.albert.server.multicast;
 
 import org.albert.util.SharedFileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.*;
@@ -10,6 +12,8 @@ import java.util.Arrays;
 // javac TextEditorServer.java && java TextEditorServer
 public class SynchroPadServerMulticast
 {
+    private static final Logger logger = LoggerFactory.getLogger(SynchroPadServerMulticast.class);
+
     public static final short OP_BREAK = -1;
     public static final short OP_INSERT = 1;
     public static final short OP_DELETE = 2;
@@ -40,11 +44,11 @@ public class SynchroPadServerMulticast
 
             byte[] buf = new byte[5000];
             DatagramPacket dIn = new DatagramPacket(buf, buf.length);
-            System.out.println("Server listening...");
+            logger.info("Server listening...");
             while (running)
             {
                 s.receive(dIn);
-                System.out.println("Package received.");
+                logger.info("Package received.");
 
                 String str = new String(buf, 0, dIn.getLength());
                 /*
@@ -61,7 +65,7 @@ public class SynchroPadServerMulticast
                 int length = Integer.parseInt(parts[3]);
                 String text = parts[4];
 
-                System.out.println(Arrays.toString(parts));
+                logger.info(Arrays.toString(parts));
 
                 if (operationType == OP_NEW_REQUEST)
                 {
@@ -72,7 +76,7 @@ public class SynchroPadServerMulticast
                 else if (operationType == OP_INSERT || operationType == OP_DELETE)
                 {
                     localText.replace(offset, offset + length, text.equals("null") ? "" : text);
-//                    System.out.println(localText.toString());
+//                    logger.info(localText.toString());
                 }
                 else if (operationType == OP_BREAK) // Just for the compiler to shut up
                 {
@@ -84,7 +88,7 @@ public class SynchroPadServerMulticast
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            logger.error("{}", e.getStackTrace());
         }
         finally
         {
@@ -112,7 +116,7 @@ public class SynchroPadServerMulticast
                     Thread.sleep(Duration.ofMinutes(1).toMillis());
 //                    Thread.sleep(Duration.ofSeconds(3)); // Debug
                     SharedFileUtils.writeToSharedFile(localText);
-//                    System.out.println("Written"); // Debug
+//                    logger.info("Written"); // Debug
                 }
                 catch (InterruptedException e)
                 {
@@ -135,7 +139,7 @@ public class SynchroPadServerMulticast
         byte[] chunk;
         for (i = 0; i < totalChunks - 1; i++)
         {
-            System.out.println(i);
+            logger.info("{}", i);
             start = i * chunkSize;
             end = Math.min(start + chunkSize, textBytes.length);
             chunk = Arrays.copyOfRange(textBytes, start, end);

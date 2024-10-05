@@ -2,6 +2,8 @@ package org.albert.server.tcp;
 
 import org.albert.util.CompilerProperties;
 import org.albert.util.MessageHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -14,6 +16,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GlobalTextHandler
 {
+    private static final Logger logger = LoggerFactory.getLogger(GlobalTextHandler.class);
+
     public static final Integer PORT = 7893;
     public static AtomicBoolean available = new AtomicBoolean(true);
 
@@ -56,17 +60,17 @@ public class GlobalTextHandler
                 newOut.writeObject(msgHolder);
                 newOut.flush();
                 if (CompilerProperties.DEBUG)
-                    System.out.println("GLOBAL TEXT SENT -> " + threadedEchoHandler.getUuid());
+                    logger.info("GLOBAL TEXT SENT -> {}", threadedEchoHandler.getUuid());
             }
             catch (SocketException e)
             {
                 // Removing threadedEchoHandler if the socket has been closed.
                 globalTextThreads.remove(threadedEchoHandler);
-                System.out.println("Disconnected -> " + threadedEchoHandler.getUuid());
+                logger.info("Disconnected -> {}", threadedEchoHandler.getUuid());
             }
             catch (Exception e)
             {
-                e.printStackTrace();
+                logger.error("{}", e.getStackTrace());
             }
         }
         // Makes the flag available to write

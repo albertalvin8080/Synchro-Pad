@@ -1,6 +1,8 @@
 package org.albert.server.udp;
 
 import org.albert.util.SharedFileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -9,6 +11,8 @@ import java.util.List;
 
 public class SynchroPadServerUdp
 {
+    private static final Logger logger = LoggerFactory.getLogger(SynchroPadServerUdp.class);
+
     private StringBuilder sb;
     private boolean running = true;
 
@@ -18,7 +22,7 @@ public class SynchroPadServerUdp
         final Thread writeToSharedFileThread = createWriteToSharedFileThread();
         writeToSharedFileThread.start();
 
-        System.out.println("Starting UDP server...");
+        logger.info("Starting UDP server...");
         try (DatagramSocket socket = new DatagramSocket(1234))
         {
             List<ThreadedPadHandlerUdp> allHandlers = new ArrayList<>();
@@ -28,7 +32,7 @@ public class SynchroPadServerUdp
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
 
-                System.out.println("Received connection...");
+                logger.info("Received connection...");
                 ThreadedPadHandlerUdp handler = new ThreadedPadHandlerUdp(socket, packet.getAddress(), packet.getPort(), allHandlers, sb);
                 handler.start();
                 allHandlers.add(handler);
@@ -36,7 +40,7 @@ public class SynchroPadServerUdp
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            logger.error("{}", e.getStackTrace());
         }
     }
 

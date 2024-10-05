@@ -3,6 +3,8 @@ package org.albert.design_patterns.observer;
 import org.albert.util.CompilerProperties;
 import org.albert.design_patterns.observer.tcp.DataSharerFacadeTcp;
 import org.albert.util.OperationType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
@@ -10,6 +12,7 @@ import javax.swing.text.DocumentFilter;
 
 public class DataSharerDocumentFilter extends DocumentFilter
 {
+    private static final Logger logger = LoggerFactory.getLogger(DataSharerDocumentFilter.class);
     private final DataSharerFacadeTcp dataSharerFacadeTcp;
 
     public DataSharerDocumentFilter(DataSharerFacadeTcp dataSharerFacadeTcp)
@@ -20,11 +23,11 @@ public class DataSharerDocumentFilter extends DocumentFilter
     @Override
     public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException
     {
-//        System.out.println("--------------------------");
-//        System.out.println("REPLACE");
-//        System.out.println("offset: " + offset);
-//        System.out.println("length: " + length);
-//        System.out.println("text: " + text);
+//        logger.info("--------------------------");
+//        logger.info("REPLACE");
+//        logger.info("offset: {}", offset);
+//        logger.info("length: {}", length);
+//        logger.info("text: {}", text);
 
         if (text.isEmpty())
         {
@@ -45,10 +48,10 @@ public class DataSharerDocumentFilter extends DocumentFilter
     @Override
     public void remove(FilterBypass fb, int offset, int length) throws BadLocationException
     {
-//        System.out.println("--------------------------");
-//        System.out.println("REMOVE");
-//        System.out.println("offset: " + offset);
-//        System.out.println("length: " + length);
+//        logger.info("--------------------------");
+//        logger.info("REMOVE");
+//        logger.info("offset: {}", offset);
+//        logger.info("length: {}", length);
 
         if (Thread.currentThread().getName().equals("AWT-EventQueue-0"))
         {
@@ -65,7 +68,7 @@ public class DataSharerDocumentFilter extends DocumentFilter
         // Only the AWT-EventQueue-0 thread handles user input.
         // Any other thread is just receiving data from the server.
         if (CompilerProperties.DEBUG)
-            System.out.println("DocumentFilter Thread -> " + Thread.currentThread().getName());
+            logger.info("DocumentFilter Thread -> {}", Thread.currentThread().getName());
 
         // In case you want to implement undo/redo afterward
         shareData(offset, length, text, operationType);

@@ -3,6 +3,8 @@ package org.albert.server.tcp;
 import org.albert.design_patterns.observer.DataSharer;
 import org.albert.util.CompilerProperties;
 import org.albert.util.MessageHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -14,6 +16,8 @@ import java.util.UUID;
 
 public class ThreadedGlobalWritePermission extends Thread
 {
+    private static final Logger logger = LoggerFactory.getLogger(ThreadedGlobalWritePermission.class);
+
     private final Socket socket;
     private final UUID uuid;
     private final ObjectInputStream in;
@@ -40,7 +44,7 @@ public class ThreadedGlobalWritePermission extends Thread
                 short operationType = msgHolder.getOperationType();
 
                 if (CompilerProperties.DEBUG)
-                    System.out.println("WRITE PERMISSION: " + uuid);
+                    logger.info("WRITE PERMISSION: " + uuid);
 
                 if (operationType == DataSharer.OP_REQUEST_GLOBAL_WRITE)
                 {
@@ -50,7 +54,7 @@ public class ThreadedGlobalWritePermission extends Thread
                     else response = DataSharer.OP_DENIED_GLOBAL_WRITE;
 
                     if (CompilerProperties.DEBUG)
-                        System.out.println("PERMISSION " + (DataSharer.OP_ACCEPTED_GLOBAL_WRITE == response ? "accepted" : "denied") + ": " + uuid);
+                        logger.info("PERMISSION " + (DataSharer.OP_ACCEPTED_GLOBAL_WRITE == response ? "accepted" : "denied") + ": " + uuid);
 
                     MessageHolder responseMessage = new MessageHolder(null, response, 0, 0, null);
 
@@ -60,7 +64,7 @@ public class ThreadedGlobalWritePermission extends Thread
                 else
                 {
                     if (CompilerProperties.DEBUG)
-                        System.out.println("PERMISSION SOCKET Unknown operation type: " + operationType + " -> " + this.uuid);
+                        logger.info("PERMISSION SOCKET Unknown operation type: " + operationType + " -> " + this.uuid);
                 }
             }
             socket.close();
@@ -69,11 +73,11 @@ public class ThreadedGlobalWritePermission extends Thread
         {
             globalTextHandler.unsubscribe(this);
             if (CompilerProperties.DEBUG)
-                System.out.println("PERMISSION SOCKET Disconnected -> " + uuid);
+                logger.info("PERMISSION SOCKET Disconnected -> " + uuid);
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            logger.error("{}", e.getStackTrace());
         }
     }
 

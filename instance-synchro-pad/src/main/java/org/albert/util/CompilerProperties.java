@@ -1,11 +1,16 @@
 package org.albert.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 public class CompilerProperties
 {
+    private static final Logger logger = LoggerFactory.getLogger(CompilerProperties.class);
+
     public static final boolean DEBUG;
 
     static
@@ -15,7 +20,7 @@ public class CompilerProperties
         {
             if (input == null)
             {
-                System.out.println("Unable to find config.properties");
+                logger.info("Unable to find config.properties");
                 DEBUG = false; // default to false
             }
             else

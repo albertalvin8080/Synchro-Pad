@@ -3,6 +3,8 @@ package org.albert.design_patterns.observer.tcp;
 import org.albert.util.CompilerProperties;
 import org.albert.design_patterns.observer.DataSharer;
 import org.albert.util.MessageHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.text.AbstractDocument;
@@ -14,6 +16,8 @@ import java.util.UUID;
 
 public class DataSharerTcp implements DataSharer
 {
+    private static final Logger logger = LoggerFactory.getLogger(DataSharerTcp.class);
+
     private final Socket permissionSocket;
     private final UUID uuid;
     private final JTextArea textArea;
@@ -64,12 +68,12 @@ public class DataSharerTcp implements DataSharer
                 try
                 {
                     if (CompilerProperties.DEBUG)
-                        System.out.println("CreateAsyncThread waiting for server");
+                        logger.info("CreateAsyncThread waiting for server");
                     MessageHolder msgHolder = (MessageHolder) reader.readObject();
 
                     short operationType = msgHolder.getOperationType();
                     if (CompilerProperties.DEBUG)
-                        System.out.println("CreateAsyncThread received operationType: " + operationType);
+                        logger.info("CreateAsyncThread received operationType: " + operationType);
 
                     if (operationType == DataSharer.OP_INSERT ||
                             operationType == DataSharer.OP_DELETE)
@@ -83,13 +87,13 @@ public class DataSharerTcp implements DataSharer
                 }
                 catch (SocketException e) // Socket closed
                 {
-                    System.out.println(e);
+                    logger.info("{}", e.getStackTrace());
                     running = false;
                 }
                 catch (EOFException e)
                 {
                     // Occurs when the server closes, for example.
-                    System.out.println(e);
+                    logger.info("{}", e.getStackTrace());
                     destroy();
                 }
                 catch (Exception e)
@@ -97,7 +101,7 @@ public class DataSharerTcp implements DataSharer
                     if (CompilerProperties.DEBUG)
                         throw new RuntimeException(e);
                     else
-                        e.printStackTrace();
+                        logger.info("{}", e.getStackTrace());
                 }
             }
         });
@@ -119,11 +123,11 @@ public class DataSharerTcp implements DataSharer
 
         if (CompilerProperties.DEBUG)
         {
-//            System.out.println("OLD CARET:   " + oldCaretPos);
-            System.out.println("Offset:      " + offset);
-            System.out.println("Length:      " + length);
-            System.out.println("Text:        " + text);
-            System.out.println("Text length: " + text.length());
+//            logger.info("OLD CARET:   " + oldCaretPos);
+            logger.info("Offset:      " + offset);
+            logger.info("Length:      " + length);
+            logger.info("Text:        " + text);
+            logger.info("Text length: " + text.length());
         }
     }
 
@@ -138,7 +142,7 @@ public class DataSharerTcp implements DataSharer
         catch (Exception e)
         {
             if (CompilerProperties.DEBUG)
-                e.printStackTrace();
+                logger.info("{}", e.getStackTrace());
         }
         running = false;
         thread.interrupt();
@@ -176,12 +180,15 @@ public class DataSharerTcp implements DataSharer
             writerPermission.flush();
 
             if (CompilerProperties.DEBUG)
-                System.out.println("WAITING FOR WRITE PERMISSION");
+                logger.info("WAITING FOR WRITE PERMISSION");
 
             final MessageHolder response = (MessageHolder) readerPermission.readObject();
 
             if (CompilerProperties.DEBUG)
-                System.out.println("PERMISSION RECEIVED");
+                logger.info("PERMISSION RECEIVED: {}",
+                    response.getOperationType() == DataSharer.OP_ACCEPTED_GLOBAL_WRITE
+                    ? "accepted" : "rejected"
+                );
             return response.getOperationType() == DataSharer.OP_ACCEPTED_GLOBAL_WRITE;
         }
         catch (IOException | ClassNotFoundException e)

@@ -4,6 +4,8 @@ import org.albert.util.CompilerProperties;
 import org.albert.design_patterns.observer.tcp.DataSharerFacadeTcp;
 import org.albert.design_patterns.observer.multicast.DataSharerMulticast;
 import org.albert.util.OperationType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.text.AbstractDocument;
@@ -12,6 +14,8 @@ import java.util.Arrays;
 
 public class TextAreaOriginator
 {
+    private static final Logger logger = LoggerFactory.getLogger(TextAreaOriginator.class);
+    
     private final JTextArea textArea;
     private final AbstractDocument abstractDocument;
     private final DataSharerFacadeTcp dataSharerFacadeTcp;
@@ -32,15 +36,15 @@ public class TextAreaOriginator
                 final String wholeText = textArea.getText();
                 final int wholeTextLength = wholeText.length();
 
-//            System.out.println(offset);
-//            System.out.println(wholeTextLength);
+//            logger.info(offset);
+//            logger.info(wholeTextLength);
 
                 if (offset + length > wholeTextLength)
                     replacementText = wholeText.substring(offset, wholeTextLength);
                 else
                     replacementText = wholeText.substring(offset, offset + length);
 
-//                System.out.println("REPLACED: " + replacementText);
+//                logger.info("REPLACED: " + replacementText);
             }
 //            // The length prior to this point was the length of the characters being replaced.
 //            // From here, it's the length of the replacing characters.
@@ -51,7 +55,7 @@ public class TextAreaOriginator
         {
             // Necessary because remove() from the filter doesn't return the string being removed.
             text = textArea.getText().substring(offset, offset + length);
-            System.out.println("text: " + text);
+            logger.info("text: " + text);
         }
 
 //        return new TextAreaMemento(
@@ -82,8 +86,8 @@ public class TextAreaOriginator
 
             if (CompilerProperties.DEBUG)
             {
-                System.out.println("ORIGINATOR INSERT");
-                System.out.println(Arrays.toString(
+                logger.info("ORIGINATOR INSERT");
+                logger.info(Arrays.toString(
                         new Object[]{offset, text.length(), replacementText, DataSharerMulticast.OP_DELETE}
                 ));
             }
@@ -99,16 +103,16 @@ public class TextAreaOriginator
 
             if (CompilerProperties.DEBUG)
             {
-                System.out.println("ORIGINATOR DELETE");
-                System.out.println(Arrays.toString(
+                logger.info("ORIGINATOR DELETE");
+                logger.info(Arrays.toString(
                         new Object[]{offset, replacementText.length(), text, DataSharerMulticast.OP_INSERT}
                 ));
             }
         }
 
-//        System.out.println("BEFORE CARET");
+//        logger.info("BEFORE CARET");
 //        textArea.setCaretPosition(memento.caretPosition); // Unnecessary when using AbstractDocument instead of textArea.setText();
-//        System.out.println("AFTER CARET");
+//        logger.info("AFTER CARET");
     }
 
 }

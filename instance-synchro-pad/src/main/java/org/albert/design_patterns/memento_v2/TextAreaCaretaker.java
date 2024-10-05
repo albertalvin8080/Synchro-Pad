@@ -1,6 +1,8 @@
 package org.albert.design_patterns.memento_v2;
 
 import org.albert.util.OperationType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.text.BadLocationException;
 import java.util.ArrayDeque;
@@ -8,6 +10,7 @@ import java.util.Deque;
 
 public class TextAreaCaretaker
 {
+    private static final Logger logger = LoggerFactory.getLogger(TextAreaCaretaker.class);
     private static final int MAX_SIZE = 50;
 
     private volatile boolean stateChange;
@@ -54,7 +57,7 @@ public class TextAreaCaretaker
         }
         catch (IllegalArgumentException | StringIndexOutOfBoundsException | BadLocationException e)
         {
-            System.out.println(e.getMessage());
+            logger.info(e.getMessage());
             redoDeque.clear();
             undoDeque.clear();
         }
@@ -86,7 +89,7 @@ public class TextAreaCaretaker
         }
         catch (IllegalArgumentException | StringIndexOutOfBoundsException | BadLocationException e)
         {
-            System.out.println(e.getMessage());
+            logger.info(e.getMessage());
             redoDeque.clear();
             undoDeque.clear();
         }

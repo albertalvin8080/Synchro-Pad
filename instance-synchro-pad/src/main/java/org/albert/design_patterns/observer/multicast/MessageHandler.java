@@ -1,5 +1,8 @@
 package org.albert.design_patterns.observer.multicast;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.swing.*;
 import java.io.IOException;
 import java.net.*;
@@ -7,6 +10,7 @@ import java.util.UUID;
 
 public class MessageHandler
 {
+    private static final Logger logger = LoggerFactory.getLogger(MessageHandler.class);
     private final MulticastSocket multicastSocket;
     private final InetAddress mcastaddr;
     private final UUID uuid;
@@ -58,19 +62,19 @@ public class MessageHandler
         catch (SocketException e)
         {
             if (e.getMessage().equals("Socket closed"))
-                System.out.println("Connection closed");
+                logger.info("Connection closed");
             else
-                e.printStackTrace();
+                logger.error("{}", e.getStackTrace());
             return null;
         }
         catch (SocketTimeoutException e)
         {
-            System.out.println("Timeout reached, trying again...");
+            logger.info("Timeout reached, trying again...");
             return null;
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            logger.error("{}", e.getStackTrace());
             return null;
         }
     }
@@ -84,8 +88,8 @@ public class MessageHandler
 
     public void processMessage(short operationType, int offset, int length, String text)
     {
-//        System.out.println("DATA SHARER");
-//        System.out.println(Arrays.toString(
+//        logger.info("DATA SHARER");
+//        logger.info(Arrays.toString(
 //                new Object[]{offset, length, text, operationType}
 //        ));
 

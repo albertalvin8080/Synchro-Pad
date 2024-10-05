@@ -2,6 +2,8 @@ package org.albert.server.udp;
 
 import org.albert.util.CompilerProperties;
 import org.albert.util.MessageHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -12,6 +14,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GlobalTextHandler
 {
+    private static final Logger logger = LoggerFactory.getLogger(GlobalTextHandler.class);
+
     public static AtomicBoolean available = new AtomicBoolean(true);
 
     // ============== SINGLETON ==============
@@ -46,7 +50,7 @@ public class GlobalTextHandler
                 DatagramSocket socket = threadedPadHandler.getSocket();
                 socket.send(packet);
 
-                if (CompilerProperties.DEBUG) System.out.println("GLOBAL TEXT SENT -> " + threadedPadHandler.getUuid());
+                if (CompilerProperties.DEBUG) logger.info("GLOBAL TEXT SENT -> " + threadedPadHandler.getUuid());
             }
             catch (SocketException e)
             {
@@ -55,7 +59,7 @@ public class GlobalTextHandler
             }
             catch (Exception e)
             {
-                e.printStackTrace();
+                logger.error("{}", e.getStackTrace());
             }
         }
 

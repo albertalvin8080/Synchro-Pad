@@ -1,11 +1,16 @@
 package org.albert.design_patterns.memento;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 
 public class MementoDocumentFilter extends DocumentFilter
 {
+    private static final Logger logger = LoggerFactory.getLogger(MementoDocumentFilter.class);
+
     private final TextAreaCaretaker textAreaCaretaker;
     private boolean justSaved;
     private int deletedCount;
@@ -18,11 +23,11 @@ public class MementoDocumentFilter extends DocumentFilter
     @Override
     public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException
     {
-//        System.out.println("--------------------------");
-//        System.out.println("REPLACE");
-//        System.out.println("offset: " + offset);
-//        System.out.println("length: " + length);
-//        System.out.println("text: " + text);
+//        logger.debug("--------------------------");
+//        logger.debug("REPLACE");
+//        logger.debug("offset: {}", offset);
+//        logger.debug("length: {}", length);
+//        logger.debug("text: {}", text);
 
         if (text.isEmpty())
         {
@@ -34,7 +39,7 @@ public class MementoDocumentFilter extends DocumentFilter
         if (text.length() > 1 || (!Character.isLetterOrDigit(c) && !justSaved))
         {
             performStateChange();
-//            System.out.println("SAVED");
+//            logger.info("SAVED");
             justSaved = true;
         }
         // Prevents from loop saving due to repetitive non digit character
@@ -49,15 +54,16 @@ public class MementoDocumentFilter extends DocumentFilter
     @Override
     public void remove(FilterBypass fb, int offset, int length) throws BadLocationException
     {
-//        System.out.println("--------------------------");
-//        System.out.println("REMOVE");
-//        System.out.println("offset: " + offset);
-//        System.out.println("length: " + length);
+//        logger.debug("--------------------------");
+//        logger.debug("REMOVE");
+//        logger.debug("offset: {}", offset);
+//        logger.debug("length: {}", length);
+
 
         if (length > 1 || deletedCount > 5)
         {
             performStateChange();
-//            System.out.println("DELETED");
+//            logger.info("DELETED");
             deletedCount = 0;
         }
         else ++deletedCount;
@@ -80,7 +86,7 @@ public class MementoDocumentFilter extends DocumentFilter
     //    @Override
 //    public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException
 //    {
-//        System.out.println("INSERT");
+//        logger.info("INSERT");
 //        performStateChange();
 //        super.insertString(fb, offset, string, attr);
 //    }

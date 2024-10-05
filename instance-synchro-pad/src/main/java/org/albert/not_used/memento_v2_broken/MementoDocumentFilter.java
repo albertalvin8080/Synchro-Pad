@@ -1,6 +1,8 @@
 package org.albert.not_used.memento_v2_broken;
 
 import org.albert.util.OperationType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
@@ -8,6 +10,8 @@ import javax.swing.text.DocumentFilter;
 
 public class MementoDocumentFilter extends DocumentFilter
 {
+    private static final Logger logger = LoggerFactory.getLogger(MementoDocumentFilter.class);
+
     private final TextAreaCaretaker textAreaCaretaker;
 
     public MementoDocumentFilter(TextAreaCaretaker textAreaCaretaker)
@@ -18,11 +22,11 @@ public class MementoDocumentFilter extends DocumentFilter
     @Override
     public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException
     {
-        System.out.println("--------------------------");
-        System.out.println("REPLACE");
-        System.out.println("offset: " + offset);
-        System.out.println("length: " + length);
-        System.out.println("text: " + text);
+        logger.info("--------------------------");
+        logger.info("REPLACE");
+        logger.info("offset: " + offset);
+        logger.info("length: " + length);
+        logger.info("text: " + text);
 
         if (text.isEmpty())
         {
@@ -36,11 +40,11 @@ public class MementoDocumentFilter extends DocumentFilter
 //        if (!Character.isWhitespace(c))
 //        {
 //            performStateChange(offset, length, text, OperationType.INSERT);
-//            System.out.println("INSERTED");
+//            logger.info("INSERTED");
 //        }
 
         performStateChange(offset, length, text, OperationType.INSERT);
-        System.out.println("INSERTED");
+        logger.info("INSERTED");
 
         super.replace(fb, offset, length, text, attrs);
     }
@@ -48,12 +52,12 @@ public class MementoDocumentFilter extends DocumentFilter
     @Override
     public void remove(FilterBypass fb, int offset, int length) throws BadLocationException
     {
-        System.out.println("--------------------------");
-        System.out.println("REMOVE");
-        System.out.println("offset: " + offset);
-        System.out.println("length: " + length);
+        logger.info("--------------------------");
+        logger.info("REMOVE");
+        logger.info("offset: " + offset);
+        logger.info("length: " + length);
         performStateChange(offset, length, null, OperationType.DELETE);
-        System.out.println("DELETED");
+        logger.info("DELETED");
         super.remove(fb, offset, length);
     }
 
@@ -78,7 +82,7 @@ public class MementoDocumentFilter extends DocumentFilter
     //    @Override
 //    public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException
 //    {
-//        System.out.println("INSERT");
+//        logger.info("INSERT");
 //        performStateChange();
 //        super.insertString(fb, offset, string, attr);
 //    }
